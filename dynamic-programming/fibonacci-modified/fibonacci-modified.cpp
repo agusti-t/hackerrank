@@ -9,111 +9,164 @@
 
 using namespace std;
 
-void formatLongNumber(vector<unsigned int>& v, int number) {
-    v.push_back(number % 10);
-    
-    if (number / 10 != 0) {
-        formatLongNumber(v, number / 10);
-    }
-}
+constexpr unsigned outputBase = 10;
+constexpr unsigned internalBase = 100;
 
-void printLongNumber(const vector <unsigned int>& number) {
-    std::copy(number.rbegin(), number.rend(), std::ostream_iterator<unsigned int>(std::cout, ""));
-    cout << endl;
-}
+void printVector(const vector<unsigned long long int>& v);
 
-void doPartialLongNumbersSum(vector<unsigned int>& result, unsigned int partialDigitsSum, int i) {
-    vector<unsigned int> temp;
-    
-    formatLongNumber(temp, partialDigitsSum);
-    
-    for (auto j = 0; j < temp.size(); j++) {
-        result[i+j] = temp[j]; 
-    }
-}
+class BigNumber {
 
-vector<unsigned int> addLongNumbers(const vector<unsigned int>& a, const vector<unsigned int>& b) {
-    const auto longestVec = a.size() >= b.size() ? a : b;
-    const auto shortestVec = a.size() >= b.size() ? b : a;
-    auto longest = max(a.size(), b.size());
-    auto shortest = min(a.size(), b.size());
+    private:
+        vector<unsigned long long int> num;
     
-    vector<unsigned int> result(longest+1);
+    public:
+        BigNumber(unsigned long long int num = 0);
+        BigNumber(const BigNumber& a);
+        BigNumber(BigNumber&& a);
+        BigNumber& operator+=(const BigNumber& a);
+        BigNumber& operator=(const BigNumber& a);
     
-    for (auto i = 0; i < shortest; i++) {
-        doPartialLongNumbersSum(result, a[i] + b[i] + result[i], i);
-    }
-    
-    if (longest > shortest) {
-        int possibleCarryIndex = shortest;
-        while (result[possibleCarryIndex] != 0) {
-            doPartialLongNumbersSum(result, longestVec[possibleCarryIndex] + result[possibleCarryIndex], possibleCarryIndex);
-            possibleCarryIndex++;
-        }
+        friend BigNumber operator*(const BigNumber& a, const BigNumber& b);
+        friend BigNumber operator+(const BigNumber& a, const BigNumber& b);
+        friend ostream& operator<<(ostream& outstream, const BigNumber& a);
+        friend bool operator<(const BigNumber& a, const BigNumber& b);
         
-        for (int k = possibleCarryIndex; k < longest; k++) {
-            result[k] = longestVec[k];
+        friend void printNaked(const BigNumber& a);
+    
+    private:
+        void add(const BigNumber& b, int exp);
+        
+};
+
+BigNumber::BigNumber(unsigned long long int n) {
+    for (; n; n /= internalBase) {
+        num.push_back(n % internalBase);
+    }
+    
+    if (num.empty()) {
+        num.push_back(0);
+    }
+}
+
+BigNumber::BigNumber(const BigNumber& a) 
+    : num(a.num)
+{ }
+
+BigNumber::BigNumber(BigNumber&& a)
+    : num(std::move(a.num))
+{ }
+
+bool operator<(const BigNumber& a, const BigNumber& b) {
+    if (a.num.size() != b.num.size()) {
+        return a.num.size() < b.num.size();
+    } else {
+        return a.num.front() < b.num.front();
+    }
+}
+
+ostream& operator<<(ostream& outstream, const BigNumber& a) {
+    vector<unsigned long long int> result(a.num.size() * 2, 0);
+    
+    for (unsigned long int i = 0; i < a.num.size(); ++i) {
+        auto d = a.num[i];
+        result[2 * i] = d % outputBase;
+        result[2 * i + 1] = d / outputBase;
+    }
+    
+    reverse(result.begin(), result.end());
+    if (result.size() > 1) {
+        auto it = result.begin();
+        while (*it == 0) {
+            it++;
         }
+        result.erase(result.begin(), it);
+    }
+    
+    for (auto r : result) {
+        outstream << r;
+    }
+    
+    return outstream;
+}
+
+BigNumber operator+(const BigNumber& a, const BigNumber& b) {
+    auto shortest = a.num.size() < b.num.size() ? a.num : b.num;
+    auto longest = a.num.size() < b.num.size() ? b.num : a.num;
+    
+    auto nShortest = shortest.size();
+    auto nLongest = longest.size();
+    
+    BigNumber result;
+    auto& r = result.num;
+    r.clear();
+    unsigned long long int carry = 0;
+    
+    for (unsigned long int i = 0; i < nShortest; i++) {
+        auto toAdd = shortest[i] + longest[i] + carry;
+        r.push_back(toAdd % internalBase);
+        carry = toAdd / internalBase;
+    }
+    
+    for (unsigned long int j = nShortest; j < nLongest; j++) {
+        auto toAdd = longest[j] + carry;
+        r.push_back(toAdd % internalBase);
+        carry = toAdd / internalBase;
     }
     
     return result;
 }
 
-vector<unsigned int> multiplyLongNumbers(const vector<unsigned int>& a, const vector<unsigned int>& b) {
-    const auto longestVec = a.size() >= b.size() ? a : b;
-    const auto shortestVec = a.size() >= b.size() ? b : a;
-    auto longest = max(a.size(), b.size());
-    auto shortest = min(a.size(), b.size());
-    
-    return {};
+void printVector(const vector<unsigned long long int>& v) {
+    cout << endl;
+    for (auto n : v) {
+        cout << n << ",";
+    }
+    cout << endl;
 }
 
-vector<unsigned int> findFibonacciModified(vector<vector <unsigned int>>& terms, vector<bool>& calculated, int n) {
-    
-//    cout << endl << "n = " << n << " - calculated[n] = " << calculated[n] << " - terms[n] = "; printLongNumber(terms[n]); cout << endl;
-    
-    if (calculated[n]) {
-        return terms[n];
+void printNaked(const BigNumber& a) {
+    if (a.num.size() == 0) {
+        cout << "" << endl;
+        return;
     }
     
-    terms[n] = addLongNumbers(findFibonacciModified(terms, calculated, n-2), findFibonacciModified(terms, calculated, n-1));
-    calculated[n] = true;
+    vector<unsigned long long int> copy(a.num);
+    reverse(copy.begin(), copy.end());
     
-    return terms[n];
+    for (auto n : copy) {
+        cout << n << ",";
+    }
+}
+
+BigNumber operator*(const BigNumber& a, const BigNumber& b) {
+    BigNumber aExp(a);
+    BigNumber bExp(b);
+    
+    BigNumber result(0);
+    
+    return result;
 }
 
 int main() {
     /* Enter your code here. Read input from STDIN. Print output to STDOUT */
-    int t1;
+    /*int t1;
     cin >> t1;
     
     int t2;
     cin >> t2;
     
     int n;
-    cin >> n;
+    cin >> n;*/
     
-    vector<vector<unsigned int>> terms(n);
-    vector<bool> calculated(n, false);
+    BigNumber a(2500), b(10);
     
-    formatLongNumber(terms[0], t1);
-    formatLongNumber(terms[1], t2);
+//    cout << "Naked print of a : "; printNaked(a); cout << " and of b : "; printNaked(b); cout << endl;
+//    cout << a << " < " << b << " ? : " << (a < b) << endl;
+
+    BigNumber c(4896436); 
+//    cout << "Naked print of c : "; printNaked(c); cout << endl; cout << "Normal print of c : " << c << endl;
     
-    /*formatLongNumber(terms[3], 40);
-    printLongNumber(terms[3]);
-    
-    formatLongNumber(terms[4], 10);
-    printLongNumber(terms[4]);*/
-    
-    //printLongNumber(multiplyLongNumbers(terms[3], terms[4]));
-    
-    calculated[0] = true;
-    calculated[1] = true;
-    
-    vector<unsigned int> searchedTerm = findFibonacciModified(terms, calculated, n-1);
-    /*reverse(searchedTerm.begin(), searchedTerm.end());
-    searchedTerm.resize(searchedTerm.size());*/
-    printLongNumber(searchedTerm);
+    cout << "Addition of a + b + c : " << (a + b + c) << endl;
     
     return 0;
 }
