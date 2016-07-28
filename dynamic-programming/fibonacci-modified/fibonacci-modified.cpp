@@ -16,7 +16,7 @@ void printVector(const vector<unsigned int>& v, const string& name);
 
 class BigNumber {
 
-public:
+    private:
         vector<unsigned int> num;
     
     public:
@@ -36,8 +36,11 @@ public:
         friend bool operator!=(const BigNumber& a, const BigNumber& b);
         
         friend void printNaked(const BigNumber& a);
+        friend void printVector(const vector<unsigned int>& v, const string& name);
+        friend void testLessThan();
+        friend void testSubstraction();
     
-//    private:
+    private:
         BigNumber singleSlotMultiplication(const BigNumber& a, const BigNumber& b) const;
         BigNumber karatsubaMultiplication(const BigNumber& a, const BigNumber& b) const;
         BigNumber getLowerHalf() const;
@@ -47,6 +50,7 @@ public:
 };
 
 BigNumber findFibonacciModified(vector<BigNumber>& terms, vector<bool>& calculated, unsigned long n);
+
 
 BigNumber::BigNumber(unsigned int n) {
     for (; n; n /= internalBase) {
@@ -158,19 +162,34 @@ bool operator<(const BigNumber& a, const BigNumber& b) {
     } else if (a.num.size() > b.num.size()) {
         return false;
     } else {
-        auto aIt = a.num.end() - 1;
-        auto bIt = b.num.end() - 1;
-        
-        while ((*aIt == *bIt) && (aIt >= a.num.begin())) {
-            aIt--;
-            bIt--;
+        bool lessThan = false;
+        for (unsigned long i = a.num.size()-1 ; i+1 > 0; i--) {
+            //cout << "Examining, a.num[" << i << "] = " << a.num[i] << " | b.num[" << i << "] = " << b.num[i] << endl;
+            if (a.num[i] < b.num[i]) {
+                lessThan = true;
+                break;
+            } else if (a.num[i] > b.num[i]) {
+                break;
+            }
         }
         
-        if (aIt < a.num.begin()) {
+        return lessThan;
+        /*auto aIt = a.num.rbegin();
+        auto bIt = b.num.rbegin();
+        
+        cout << "Examining, aIt : " << *aIt << " | bIt : " << *bIt << endl;
+        
+        while ((*aIt == *bIt) && (aIt < a.num.rend())) {
+            aIt++;
+            bIt++;
+                    cout << "Examining, aIt : " << *aIt << " | bIt : " << *bIt << endl;
+        }
+        
+        if (aIt < a.num.rend()) {
             return false;
         } else {
             return *aIt < *bIt;
-        }
+        }*/
     }
 }
 
@@ -246,6 +265,8 @@ BigNumber operator-(const BigNumber& a, const BigNumber& b) {
     //I am using the fact that according to the problem, there are no negative terms in the fibonacci series.
     if (a < b) {
         cout << endl << "Trying to substract BigNumbers : a = " << a << " - b = " << b << ". Since a < b, the behaviour is undefined." << endl;
+        printVector(a.num, "a");
+        printVector(b.num, "b");
         return BigNumber();
     } else if (a == b) {
         return BigNumber();
@@ -282,7 +303,7 @@ BigNumber operator-(const BigNumber& a, const BigNumber& b) {
     }
 }
 
-/*void printVector(const vector<unsigned int>& v, const string& name) {
+void printVector(const vector<unsigned int>& v, const string& name) {
     cout << endl << "Printing vector - " << name << " of size = " << v.size() << " : [";
     for (unsigned long int i = 0; i < v.size()-1; i++) {
         cout << v[i] << ",";
@@ -291,7 +312,7 @@ BigNumber operator-(const BigNumber& a, const BigNumber& b) {
     cout << endl;
 }
 
-void printNaked(const BigNumber& a) {
+/*void printNaked(const BigNumber& a) {
     if (a.num.size() == 0) {
         cout << "" << endl;
         return;
@@ -305,29 +326,21 @@ void printNaked(const BigNumber& a) {
     }
 }*/
 
-/*BigNumber fibonacciModifiedRecursive(unsigned int n, vector<BigNumber>& v) {
-    if (v[n-1] != 0) {
-        cout << v[n-1] << endl;;
-        return v[n-1];
-    }
+void testLessThan() {
+    BigNumber a, b;
     
-    v[n-1] = fibonacciModifiedRecursive(n-3, v) + fibonacciModifiedRecursive(n-2, v)*fibonacciModifiedRecursive(n-2, v);
-    return v[n-1];
+    a = 819025;
+    b = 797449;
+    cout << "a = " << a << " - b = " << b << " a < b ? : " << (a < b) << endl;
 }
 
-void fibonacciModified(unsigned int t1, unsigned int t2, unsigned int n) {
-    cout << "t1 = " << t1 << " - t2 = " << t2 << " - n = " << n << endl;
-    if (t1 == 0 && t2 == 0) {
-        cout << 0;
-        return;
-    }
+void testSubstraction() {
+    BigNumber a, b;
     
-    vector<BigNumber> v(n, 0);
-    v[0] = t1;
-    v[1] = t2;
-    
-    BigNumber term = fibonacciModifiedRecursive(n, v);    
-}*/
+    a = 5929;
+    b = 5929;
+    cout << "a = " << a << " - b = " << b << " | a - b = " << (a - b) << endl;
+}
 
 BigNumber findFibonacciModified(vector<BigNumber>& terms, vector<bool>& calculated, unsigned long n) {
     if (calculated[n]) {
@@ -342,8 +355,10 @@ BigNumber findFibonacciModified(vector<BigNumber>& terms, vector<bool>& calculat
 }
 
 int main() {
+    //testLessThan();
+    //testSubstraction();
     
-    unsigned int t1, t2;
+/*    unsigned int t1, t2;
     cin >> t1;
     cin >> t2;
    
@@ -353,15 +368,15 @@ int main() {
     vector<BigNumber> terms(n+1);
     vector<bool> calculated(n+1, false);
     terms[0] = t1;
-    terms[1] = t2;
+    terms[1] = t2;*/
 
-    /*unsigned long n = 15;
+    unsigned long n = 15;
     vector<BigNumber> terms(n+1);
     vector<bool> calculated(n+1, false);
-    terms[0] = 0;
-    terms[1] = 1;*/
+    terms[0] = 1;
+    terms[1] = 2;
     
-    //cout << "t1 = " << t1 << " - t2 = " << t2 << " - n = " << n << endl;
+    cout << "terms[0] = " << terms[0] << " - terms[1] = " << terms[1] << " - n = " << n << endl;
     
     calculated[0] = true;
     calculated[1] = true;
