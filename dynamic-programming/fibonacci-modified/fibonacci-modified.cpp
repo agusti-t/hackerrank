@@ -16,7 +16,7 @@ void printVector(const vector<unsigned long long int>& v, const string& name);
 
 class BigNumber {
 
-    private:
+public:
         vector<unsigned long long int> num;
     
     public:
@@ -79,6 +79,7 @@ BigNumber& BigNumber::operator=(const BigNumber& a) {
 }
 
 BigNumber BigNumber::singleSlotMultiplication(const BigNumber& a, const BigNumber& b) const {
+    cout << "Multiplying by single slot : a = " << a << " * b = " << b << endl;
     BigNumber result;
     if (a.num.size() == 0 || b.num.size() == 0) {
         result.num.clear();
@@ -86,20 +87,18 @@ BigNumber BigNumber::singleSlotMultiplication(const BigNumber& a, const BigNumbe
     } else if (a.num.size() > 1 && b.num.size() > 1) {
         cout << "Trying to multiply : a = " << a << " * b = " << b << 
             ". One of them has more than one digit so it is not possible with this function." << endl;
+    } else  if ((a.num.size() == 1 && a.num[0] == 0) || (b.num.size() == 1 && b.num[0] == 0)) {
+        result.num.clear();
+        result.num.push_back(0);
     } else {
         auto shortest = a.num.size() < b.num.size() ? a : b;
         auto longest = a.num.size() < b.num.size() ? b : a;
     
         for (unsigned int i = 0; i < shortest.num[0]; i++) {
-            result += longest;
+            result = result + longest;
+            cout << result << ",";
         }
-/*        auto mult = a.num[0] * b.num[0];
-        if (mult >= internalBase) {
-            result.num[0] = mult % internalBase;   
-            result.num.push_back(mult / internalBase);
-        } else{
-            result.num[0] = mult;
-        }*/
+        cout << endl;
     }
     
     return result;
@@ -126,6 +125,7 @@ BigNumber BigNumber::getHigherHalf() const {
 
 BigNumber BigNumber::karatsubaMultiplication(const BigNumber& a, const BigNumber& b) const {
     if (a.num.size() == 1 || b.num.size() == 1) {
+        cout << "Going into single slot." << endl;
         return singleSlotMultiplication(a, b);
     } else {
         unsigned int m = static_cast<unsigned int>(max(ceil(a.num.size() / 2), ceil(b.num.size() / 2))) * 2;
@@ -141,15 +141,22 @@ BigNumber BigNumber::karatsubaMultiplication(const BigNumber& a, const BigNumber
         printVector(lowB.num, "lowB");
         
         BigNumber z0 = karatsubaMultiplication(lowA, lowB);
+        cout << "z0 = " << z0 << endl;
         printVector(z0.num, "z0");
         BigNumber z1 = karatsubaMultiplication((lowA+highA), (lowB+highB));
+        cout << "z1 = " << z1 << endl;
         printVector(z1.num, "z1");
         BigNumber z2 = karatsubaMultiplication(highA, highB);
+        cout << "z2 = " << z2 << endl;
         printVector(z2.num, "z2");
         
         BigNumber firstPart = z2.shiftLeft(m);
         printVector(firstPart.num, "firstPart");
-        BigNumber secondPart1 = z1 - z2 - z0;
+        cout << "z2 = " << z2 << endl;
+        printVector(z2.num, "z2");
+        BigNumber secondPart11 = z1 - z2;
+        printVector(secondPart11.num, "secondPart11");
+        BigNumber secondPart1 = secondPart11 - z0;
         printVector(secondPart1.num, "secondPart1");
         BigNumber secondPart2 = secondPart1.shiftLeft(m/2);
         printVector(secondPart2.num, "secondPart2");
@@ -158,21 +165,29 @@ BigNumber BigNumber::karatsubaMultiplication(const BigNumber& a, const BigNumber
     }
 }
 
+BigNumber operator*(const BigNumber& a, const BigNumber& b) {
+    BigNumber result = a.karatsubaMultiplication(a, b);
+    return result;
+}
+
 bool operator<(const BigNumber& a, const BigNumber& b) {
     if (a.num.size() < b.num.size()) {
         return true;
     } else if (a.num.size() > b.num.size()) {
         return false;
     } else {
-        auto aIt = a.num.begin();
-        auto bIt = b.num.begin();
+        cout << "right place, wrong time" << endl;
+        auto aIt = a.num.end() - 1;
+        auto bIt = b.num.end() - 1;
+        cout << "now examining : aIt = " << *aIt << " - bIt = " << *bIt << endl;
         
-        while ((*aIt == *bIt) && (aIt < a.num.end())) {
-            aIt++;
-            bIt++;
+        while ((*aIt == *bIt) && (aIt >= a.num.begin())) {
+            cout << "now examining : aIt = " << *aIt << " - bIt = " << *bIt << endl;
+            aIt--;
+            bIt--;
         }
         
-        if (aIt == a.num.end()) {
+        if (aIt < a.num.begin()) {
             return false;
         } else {
             return *aIt < *bIt;
@@ -237,6 +252,10 @@ BigNumber operator+(const BigNumber& a, const BigNumber& b) {
         carry = toAdd / internalBase;
     }
     
+    if (carry) {
+        r.push_back(carry);
+    }
+    
     return result;
 }
 
@@ -258,40 +277,40 @@ BigNumber operator-(const BigNumber& a, const BigNumber& b) {
         auto nA = a.num.size();
         auto nB = b.num.size();
         
+        printVector(a.num, "a");
+        printVector(b.num, "b");
+        
         for (unsigned long int i = 0; i < nB; i++) {
+            cout << "a.num[" << i << "] = " << a.num[i];
+            cout << " / b.num[" << i << "] = " << b.num[i] << endl;;
             if (a.num[i] < b.num[i] + carry) {
+                cout << "with carry" << endl;
                 r.push_back((a.num[i] + internalBase) - (b.num[i] + carry));
                 carry = 1;
+                printVector(r, "result vector with carry");
             } else {
+                cout << "without carry" << endl;
                 r.push_back(a.num[i] - (b.num[i] + carry));
                 carry = 0;
             }
         }
         
-        if (nA > nB) {
-            r.push_back(a.num[nB] - carry);
-            carry = 0;
-        }
-        
-        for (unsigned long int j = nB+1; j < nA; j++) {
-            r.push_back(a.num[j]);
+        for (unsigned long int j = nB; j < nA; j++) {
+            if (a.num[j] < carry) {
+                r.push_back((a.num[j] + internalBase) - carry);
+                carry = 1;
+            } else {
+                r.push_back(a.num[j] - carry);
+                carry = 0;
+            }
         }
         
         return result;
     }
 }
 
-BigNumber operator*(const BigNumber& a, const BigNumber& b) {
-    BigNumber aExp(a);
-    BigNumber bExp(b);
-    
-    BigNumber result;
-    
-    return result;
-}
-
 void printVector(const vector<unsigned long long int>& v, const string& name) {
-    cout << endl << "Printing vector - " << name << " : [";
+    cout << endl << "Printing vector - " << name << " of size = " << v.size() << " : [";
     for (unsigned long int i = 0; i < v.size()-1; i++) {
         cout << v[i] << ",";
     }
@@ -324,26 +343,32 @@ int main() {
     int n;
     cin >> n;*/
     
-    BigNumber a(705494), b(98245);
+    BigNumber a(4224), b(4096);
     
 //    cout << "Naked print of a : "; printNaked(a); cout << " and of b : "; printNaked(b); cout << endl;
 //    cout << a << " < " << b << " ? : " << (a < b) << endl;
 
-    BigNumber c(4896436); 
+    BigNumber c(10000); 
 //    cout << "Naked print of c : "; printNaked(c); cout << endl; cout << "Normal print of c : " << c << endl;
     
     cout << "a = " << a << " - b = " << b << " - c = " << c << endl;
-    cout << "Addition of a + b : " << (a + b) << endl;
+//    cout << "Addition of a + b : " << (a + b) << endl;
 //    cout << "Addition of a + b + c : " << (a + b + c) << endl;
-    cout << "Substraction a - b : " << (a - b) << endl;
+//    cout << "Substraction a - b : " << (a - b) << endl;
+//    printVector(c.num, "c");
+//    printVector(a.num, "a");
+//    printVector(b.num, "b");
 //    cout << "Substraction c - a - b : " << (c - b - a) << endl;
 //    cout << "Multiplication a * b : " << (a * b) << endl;
     
-    BigNumber d(100), e(100);
+    BigNumber d(199), e(199), f(948683), g(948683);
     
-    cout << "d = " << d << " - e = " << e << endl;
+    cout << "d = " << d << " - e = " << e << " - f = " << f << " - g = " << g << endl;
     cout << "KaratsubaMultiplication d * e : " << d.karatsubaMultiplication(d, e) << endl;
-   // cout << "SingleSlotMultiplication d * e : " << d.singleSlotMultiplication(d, e) << endl;
+    cout << "KaratsubaMultiplication f * g : " << d.karatsubaMultiplication(f, g) << endl;
+    cout << "KaratsubaMultiplication f * g : " << f * g << endl;
+//    cout << "SingleSlotMultiplication d * e : " << d.singleSlotMultiplication(d, e) << endl;
+//    cout << "Addition d + e : " << d + e << endl;
         
     return 0;
 }
