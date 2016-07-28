@@ -12,15 +12,15 @@ using namespace std;
 constexpr unsigned outputBase = 10;
 constexpr unsigned internalBase = 100;
 
-void printVector(const vector<unsigned long long int>& v, const string& name);
+void printVector(const vector<unsigned int>& v, const string& name);
 
 class BigNumber {
 
 public:
-        vector<unsigned long long int> num;
+        vector<unsigned int> num;
     
     public:
-        BigNumber(unsigned long long int num = 0);
+        BigNumber(unsigned int num = 0);
         BigNumber(const BigNumber& a);
         BigNumber(BigNumber&& a);
         BigNumber& operator+=(const BigNumber& a);
@@ -33,6 +33,7 @@ public:
         friend ostream& operator<<(ostream& outstream, const BigNumber& a);
         friend bool operator<(const BigNumber& a, const BigNumber& b);
         friend bool operator==(const BigNumber& a, const BigNumber& b);
+        friend bool operator!=(const BigNumber& a, const BigNumber& b);
         
         friend void printNaked(const BigNumber& a);
     
@@ -45,7 +46,9 @@ public:
         
 };
 
-BigNumber::BigNumber(unsigned long long int n) {
+BigNumber findFibonacciModified(vector<BigNumber>& terms, vector<bool>& calculated, unsigned long n);
+
+BigNumber::BigNumber(unsigned int n) {
     for (; n; n /= internalBase) {
         num.push_back(n % internalBase);
     }
@@ -79,7 +82,6 @@ BigNumber& BigNumber::operator=(const BigNumber& a) {
 }
 
 BigNumber BigNumber::singleSlotMultiplication(const BigNumber& a, const BigNumber& b) const {
-    cout << "Multiplying by single slot : a = " << a << " * b = " << b << endl;
     BigNumber result;
     if (a.num.size() == 0 || b.num.size() == 0) {
         result.num.clear();
@@ -96,9 +98,7 @@ BigNumber BigNumber::singleSlotMultiplication(const BigNumber& a, const BigNumbe
     
         for (unsigned int i = 0; i < shortest.num[0]; i++) {
             result = result + longest;
-            cout << result << ",";
         }
-        cout << endl;
     }
     
     return result;
@@ -125,7 +125,6 @@ BigNumber BigNumber::getHigherHalf() const {
 
 BigNumber BigNumber::karatsubaMultiplication(const BigNumber& a, const BigNumber& b) const {
     if (a.num.size() == 1 || b.num.size() == 1) {
-        cout << "Going into single slot." << endl;
         return singleSlotMultiplication(a, b);
     } else {
         unsigned int m = static_cast<unsigned int>(max(ceil(a.num.size() / 2), ceil(b.num.size() / 2))) * 2;
@@ -135,31 +134,14 @@ BigNumber BigNumber::karatsubaMultiplication(const BigNumber& a, const BigNumber
         BigNumber lowB = b.getLowerHalf();
         BigNumber highB = b.getHigherHalf();
         
-        printVector(highA.num, "highA");
-        printVector(lowA.num, "lowA");
-        printVector(highB.num, "highB");
-        printVector(lowB.num, "lowB");
-        
         BigNumber z0 = karatsubaMultiplication(lowA, lowB);
-        cout << "z0 = " << z0 << endl;
-        printVector(z0.num, "z0");
         BigNumber z1 = karatsubaMultiplication((lowA+highA), (lowB+highB));
-        cout << "z1 = " << z1 << endl;
-        printVector(z1.num, "z1");
         BigNumber z2 = karatsubaMultiplication(highA, highB);
-        cout << "z2 = " << z2 << endl;
-        printVector(z2.num, "z2");
         
         BigNumber firstPart = z2.shiftLeft(m);
-        printVector(firstPart.num, "firstPart");
-        cout << "z2 = " << z2 << endl;
-        printVector(z2.num, "z2");
         BigNumber secondPart11 = z1 - z2;
-        printVector(secondPart11.num, "secondPart11");
         BigNumber secondPart1 = secondPart11 - z0;
-        printVector(secondPart1.num, "secondPart1");
         BigNumber secondPart2 = secondPart1.shiftLeft(m/2);
-        printVector(secondPart2.num, "secondPart2");
                         
         return (firstPart + secondPart2 + z0);
     }
@@ -176,13 +158,10 @@ bool operator<(const BigNumber& a, const BigNumber& b) {
     } else if (a.num.size() > b.num.size()) {
         return false;
     } else {
-        cout << "right place, wrong time" << endl;
         auto aIt = a.num.end() - 1;
         auto bIt = b.num.end() - 1;
-        cout << "now examining : aIt = " << *aIt << " - bIt = " << *bIt << endl;
         
         while ((*aIt == *bIt) && (aIt >= a.num.begin())) {
-            cout << "now examining : aIt = " << *aIt << " - bIt = " << *bIt << endl;
             aIt--;
             bIt--;
         }
@@ -199,8 +178,12 @@ bool operator==(const BigNumber& a, const BigNumber& b) {
     return a.num == b.num;
 }
 
+bool operator!=(const BigNumber& a, const BigNumber& b) {
+    return a.num != b.num;
+}
+
 ostream& operator<<(ostream& outstream, const BigNumber& a) {
-    vector<unsigned long long int> result(a.num.size() * 2, 0);
+    vector<unsigned int> result(a.num.size() * 2, 0);
     
     for (unsigned long int i = 0; i < a.num.size(); ++i) {
         auto d = a.num[i];
@@ -238,7 +221,7 @@ BigNumber operator+(const BigNumber& a, const BigNumber& b) {
     BigNumber result;
     auto& r = result.num;
     r.clear();
-    unsigned long long int carry = 0;
+    unsigned int carry = 0;
     
     for (unsigned long int i = 0; i < nShortest; i++) {
         auto toAdd = shortest[i] + longest[i] + carry;
@@ -263,8 +246,6 @@ BigNumber operator-(const BigNumber& a, const BigNumber& b) {
     //I am using the fact that according to the problem, there are no negative terms in the fibonacci series.
     if (a < b) {
         cout << endl << "Trying to substract BigNumbers : a = " << a << " - b = " << b << ". Since a < b, the behaviour is undefined." << endl;
-        printVector(a.num, "a");
-        printVector(b.num, "b");
         return BigNumber();
     } else if (a == b) {
         return BigNumber();
@@ -272,24 +253,16 @@ BigNumber operator-(const BigNumber& a, const BigNumber& b) {
         BigNumber result;
         auto& r = result.num;
         r.clear();
-        unsigned long long int carry = 0;
+        unsigned int carry = 0;
         
         auto nA = a.num.size();
         auto nB = b.num.size();
         
-        printVector(a.num, "a");
-        printVector(b.num, "b");
-        
         for (unsigned long int i = 0; i < nB; i++) {
-            cout << "a.num[" << i << "] = " << a.num[i];
-            cout << " / b.num[" << i << "] = " << b.num[i] << endl;;
             if (a.num[i] < b.num[i] + carry) {
-                cout << "with carry" << endl;
                 r.push_back((a.num[i] + internalBase) - (b.num[i] + carry));
                 carry = 1;
-                printVector(r, "result vector with carry");
             } else {
-                cout << "without carry" << endl;
                 r.push_back(a.num[i] - (b.num[i] + carry));
                 carry = 0;
             }
@@ -309,7 +282,7 @@ BigNumber operator-(const BigNumber& a, const BigNumber& b) {
     }
 }
 
-void printVector(const vector<unsigned long long int>& v, const string& name) {
+/*void printVector(const vector<unsigned int>& v, const string& name) {
     cout << endl << "Printing vector - " << name << " of size = " << v.size() << " : [";
     for (unsigned long int i = 0; i < v.size()-1; i++) {
         cout << v[i] << ",";
@@ -324,51 +297,76 @@ void printNaked(const BigNumber& a) {
         return;
     }
     
-    vector<unsigned long long int> copy(a.num);
+    vector<unsigned int> copy(a.num);
     reverse(copy.begin(), copy.end());
     
     for (auto n : copy) {
         cout << n << ",";
     }
+}*/
+
+/*BigNumber fibonacciModifiedRecursive(unsigned int n, vector<BigNumber>& v) {
+    if (v[n-1] != 0) {
+        cout << v[n-1] << endl;;
+        return v[n-1];
+    }
+    
+    v[n-1] = fibonacciModifiedRecursive(n-3, v) + fibonacciModifiedRecursive(n-2, v)*fibonacciModifiedRecursive(n-2, v);
+    return v[n-1];
+}
+
+void fibonacciModified(unsigned int t1, unsigned int t2, unsigned int n) {
+    cout << "t1 = " << t1 << " - t2 = " << t2 << " - n = " << n << endl;
+    if (t1 == 0 && t2 == 0) {
+        cout << 0;
+        return;
+    }
+    
+    vector<BigNumber> v(n, 0);
+    v[0] = t1;
+    v[1] = t2;
+    
+    BigNumber term = fibonacciModifiedRecursive(n, v);    
+}*/
+
+BigNumber findFibonacciModified(vector<BigNumber>& terms, vector<bool>& calculated, unsigned long n) {
+    if (calculated[n]) {
+        return terms[n];
+    }
+    
+    BigNumber termToPower = findFibonacciModified(terms, calculated, n-1);
+    terms[n] = findFibonacciModified(terms, calculated, n-2) + termToPower*termToPower;
+    calculated[n] = true;
+    
+    return terms[n];
 }
 
 int main() {
-    /* Enter your code here. Read input from STDIN. Print output to STDOUT */
-    /*int t1;
+    
+    unsigned int t1, t2;
     cin >> t1;
-    
-    int t2;
     cin >> t2;
+   
+    unsigned long n; 
+    cin >> n;
     
-    int n;
-    cin >> n;*/
-    
-    BigNumber a(4224), b(4096);
-    
-//    cout << "Naked print of a : "; printNaked(a); cout << " and of b : "; printNaked(b); cout << endl;
-//    cout << a << " < " << b << " ? : " << (a < b) << endl;
+    vector<BigNumber> terms(n+1);
+    vector<bool> calculated(n+1, false);
+    terms[0] = t1;
+    terms[1] = t2;
 
-    BigNumber c(10000); 
-//    cout << "Naked print of c : "; printNaked(c); cout << endl; cout << "Normal print of c : " << c << endl;
+    /*unsigned long n = 15;
+    vector<BigNumber> terms(n+1);
+    vector<bool> calculated(n+1, false);
+    terms[0] = 0;
+    terms[1] = 1;*/
     
-    cout << "a = " << a << " - b = " << b << " - c = " << c << endl;
-//    cout << "Addition of a + b : " << (a + b) << endl;
-//    cout << "Addition of a + b + c : " << (a + b + c) << endl;
-//    cout << "Substraction a - b : " << (a - b) << endl;
-//    printVector(c.num, "c");
-//    printVector(a.num, "a");
-//    printVector(b.num, "b");
-//    cout << "Substraction c - a - b : " << (c - b - a) << endl;
-//    cout << "Multiplication a * b : " << (a * b) << endl;
+    //cout << "t1 = " << t1 << " - t2 = " << t2 << " - n = " << n << endl;
     
-    BigNumber d(199), e(199), f(948683), g(948683);
+    calculated[0] = true;
+    calculated[1] = true;
     
-    cout << "d = " << d << " - e = " << e << " - f = " << f << " - g = " << g << endl;
-    cout << "KaratsubaMultiplication d * e : " << d.karatsubaMultiplication(d, e) << endl;
-    cout << "KaratsubaMultiplication f * g : " << d.karatsubaMultiplication(f, g) << endl;
-    cout << "KaratsubaMultiplication f * g : " << f * g << endl;
-//    cout << "SingleSlotMultiplication d * e : " << d.singleSlotMultiplication(d, e) << endl;
-//    cout << "Addition d + e : " << d + e << endl;
+    cout << findFibonacciModified(terms, calculated, n-1) << endl;
         
     return 0;
 }
