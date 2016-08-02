@@ -6,7 +6,7 @@ page in hackerrank. I attach the file with his/her solution since he did not
 attach any license to it as far as I could see.
 
 To compile (in Mac OS with developers tools installed):
-clang++ -std=c++11 -stdlib=libc++ -Weverything -Wno-c++98-compat-pedantic -Wno-c++98-compat -Wno-padded fibonacci-modified.cpp -o fibonacci
+clang++ -std=c++11 -stdlib=libc++ -Weverything -Wno-c++98-compat-pedantic -Wno-c++98-compat -Wno-padded -Wno-exit-time-destructors -Wno-global-constructors fibonacci-modified.cpp -o fibonacci
 
 To run:
 ./fibonacci
