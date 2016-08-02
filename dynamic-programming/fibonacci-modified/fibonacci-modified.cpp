@@ -19,7 +19,6 @@ using namespace std::placeholders;
 constexpr unsigned outputBase = 10;
 constexpr unsigned long long internalBase = 1000000000;
 constexpr unsigned baseRatio = 9;
-constexpr bool measureTime = false;
 
 static map<string, nanoseconds> durations;
 
@@ -70,24 +69,21 @@ class BigNumber {
         
         friend void printNaked(const BigNumber& a);
         friend void printVector(const vector<unsigned long long int>& v, const string& name);
-        friend void testLessThan();
-        friend void testSubstraction();
-        friend void testAddition();
-        friend void testMultiplication();
+       
         friend BigNumber singleSlotMultiplication(const BigNumber& a, const BigNumber& b);
         friend BigNumber karatsubaMultiplication(const BigNumber& a, const BigNumber& b);
-        
+    
+    private:
         BigNumber getLowerHalf() const;
         BigNumber getHigherHalf() const;
         BigNumber& shiftLeft(unsigned long long int p);
-    
-    private:
-        
-        
-        
 };
 
 BigNumber findFibonacciModified(vector<BigNumber>& terms, vector<bool>& calculated, unsigned long n);
+void testLessThan();
+void testSubstraction();
+void testAddition();
+void testMultiplication();
 
 
 BigNumber::BigNumber(unsigned long long int n) {
@@ -178,115 +174,24 @@ BigNumber BigNumber::getHigherHalf() const {
     return result;
 }
 
-/*BigNumber BigNumber::getHigherHalf() const {
-    BigNumber result;
-    auto& r = result.num;
-    std::move(num.begin() + num.size() / 2, num.end(), r.begin());
-    //r.assign(num.begin() + num.size() / 2, num.end());
-    
-    //Now make sure we don't have 0's left in front
-    while (!(r.size() == 1) && (r.back() == 0)) {
-        r.pop_back();
-    }
-    
-    return result;
-}*/
-
 BigNumber karatsubaMultiplication(const BigNumber& a, const BigNumber& b) {
     if (a.num.size() == 1 || b.num.size() == 1) {
-        BigNumber res;
-        if (measureTime) {
-            res = measureAndExecute("singleSlotMultiplication", singleSlotMultiplication, a, b);
-        } else {
-            res = singleSlotMultiplication(a, b);
-        }
-        
-        return res;
+        return singleSlotMultiplication(a, b);
     } else {
         auto m = static_cast<unsigned long long int>(max(ceil(a.num.size() / 2), ceil(b.num.size() / 2)));
         
-        BigNumber lowA;
-        if (measureTime) {
-            std::chrono::high_resolution_clock::time_point time1 = std::chrono::high_resolution_clock::now();
-            lowA = a.getLowerHalf();
-            std::chrono::high_resolution_clock::time_point time2 = std::chrono::high_resolution_clock::now();
-            auto duration = (time2 - time1);
-            durations["getLowerHalfA"] += duration;
-        } else {
-            lowA = a.getLowerHalf();
-        }
-        BigNumber highA;
-        if (measureTime) {
-            std::chrono::high_resolution_clock::time_point time1 = std::chrono::high_resolution_clock::now();
-            highA = a.getHigherHalf();
-            std::chrono::high_resolution_clock::time_point time2 = std::chrono::high_resolution_clock::now();
-            auto duration = (time2 - time1);
-            durations["getHigherHalfA"] += duration;
-        } else {
-            highA = a.getHigherHalf();
-        }
-        BigNumber lowB;
-        if (measureTime) {
-            std::chrono::high_resolution_clock::time_point time1 = std::chrono::high_resolution_clock::now();
-            lowB = b.getLowerHalf();
-            std::chrono::high_resolution_clock::time_point time2 = std::chrono::high_resolution_clock::now();
-            auto duration = (time2 - time1);
-            durations["getLowerHalfB"] += duration;
-        } else {
-            lowB = b.getLowerHalf();
-        }
-        BigNumber highB;
-        if (measureTime) {
-            std::chrono::high_resolution_clock::time_point time1 = std::chrono::high_resolution_clock::now();
-            highB = b.getHigherHalf();
-            std::chrono::high_resolution_clock::time_point time2 = std::chrono::high_resolution_clock::now();
-            auto duration = (time2 - time1);
-            durations["getHigherHalfB"] += duration;
-        } else {
-            highB = b.getHigherHalf();
-        }
+        BigNumber lowA = a.getLowerHalf();
+        BigNumber highA = a.getHigherHalf();
+        BigNumber lowB = b.getLowerHalf();
+        BigNumber highB = b.getHigherHalf();
         
         BigNumber z0, z1, z2;
-        if (measureTime) {
-            z0 = measureAndExecute("karatsuba-z0", karatsubaMultiplication, lowA, lowB);
-            z1 = measureAndExecute("karatsuba-z1", karatsubaMultiplication, (lowA+highA), (lowB+highB));
-            z2 = measureAndExecute("karatsuba-z2", karatsubaMultiplication, highA, highB);
-        } else {
-            z0 = karatsubaMultiplication(lowA, lowB);
-            z1 = karatsubaMultiplication((lowA+highA), (lowB+highB));
-            z2 = karatsubaMultiplication(highA, highB);
-        }
-        
-        if (measureTime) {
-            std::chrono::high_resolution_clock::time_point time1 = std::chrono::high_resolution_clock::now();
-            BigNumber resPart1 = z2.shiftLeft(m);
-            std::chrono::high_resolution_clock::time_point time2 = std::chrono::high_resolution_clock::now();
-            auto duration = (time2 - time1);
-            durations["resPart1"] += duration;
-            
-            time1 = std::chrono::high_resolution_clock::now();
-            BigNumber resPart21 = z1 - z2 - z0;
-            time2 = std::chrono::high_resolution_clock::now();
-            duration = (time2 - time1);
-            durations["resPart21"] += duration;
-            
-            time1 = std::chrono::high_resolution_clock::now();
-            BigNumber resPart2 = resPart21.shiftLeft(m/baseRatio);
-            time2 = std::chrono::high_resolution_clock::now();
-            duration = (time2 - time1);
-            durations["resPart2"] += duration;
-            
-            time1 = std::chrono::high_resolution_clock::now();
-            BigNumber finalRes = resPart1 + resPart2 + z0;
-            time2 = std::chrono::high_resolution_clock::now();
-            duration = (time2 - time1);
-            durations["finalRes"] += duration;
-            
-            return finalRes;
-        } else {
-            BigNumber resPart2 = (z1 - z2 - z0).shiftLeft(m);
-            return (z2.shiftLeft(m << 1) + resPart2 + z0);
-        }
+        z0 = karatsubaMultiplication(lowA, lowB);
+        z1 = karatsubaMultiplication((lowA+highA), (lowB+highB));
+        z2 = karatsubaMultiplication(highA, highB);
+         
+        BigNumber resPart2 = (z1 - z2 - z0).shiftLeft(m);
+        return (z2.shiftLeft(m << 1) + resPart2 + z0);
     }
 }
 
@@ -303,7 +208,6 @@ bool operator<(const BigNumber& a, const BigNumber& b) {
     } else {
         bool lessThan = false;
         for (unsigned long i = a.num.size()-1 ; i+1 > 0; --i) {
-            //cout << "Examining, a.num[" << i << "] = " << a.num[i] << " | b.num[" << i << "] = " << b.num[i] << endl;
             if (a.num[i] < b.num[i]) {
                 lessThan = true;
                 break;
@@ -545,13 +449,7 @@ int main() {
     calculated[0] = true;
     calculated[1] = true;
     
-    if (measureTime) {
-        BigNumber res = measureAndExecute("findFibonacciModified", findFibonacciModified, terms, calculated, n-1);
-        cout << res << endl << endl;
-        printAllDurations();
-    } else {
-        cout << findFibonacciModified(terms, calculated, n-1) << endl;
-    }
+    cout << findFibonacciModified(terms, calculated, n-1) << endl;
         
     return 0;
 }
