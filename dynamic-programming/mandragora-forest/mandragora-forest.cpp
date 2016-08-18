@@ -3,9 +3,10 @@
 #include <vector>
 #include <iostream>
 #include <algorithm>
+
 using namespace std;
 
-constexpr bool debug = true;
+constexpr bool debug = false;
 
 void printVector(const vector<unsigned long int>& v, const string& name) {
     cout << "Printing vector - " << name << " of size = " << v.size() << " : [";
@@ -17,19 +18,32 @@ void printVector(const vector<unsigned long int>& v, const string& name) {
 }
 
 unsigned long int findMaxExperienceDP(const vector<unsigned long int>& h, unsigned int i, unsigned int s, unsigned int p, 
-		vector<unsigned long int>& withS, vector<unsigned long int>& withP, vector<bool>& calculated, vector<unsigned long int>& maxExp) {
+		vector<unsigned long int>& withS, vector<unsigned long int>& withP, vector<bool>& calculated) {
 	if (i == h.size()-1) {
-		withS[i] = withS[i-1] + (p + s * h[i]);
-		withP[i] = withP[i-1] + (p + s * h[i]);
-		maxExp[i] = max(withS[i], withP[i]);
+		withS[i] = (p + s * h[i]);
+		withP[i] = (p + s * h[i]);
 		calculated[i] = true;
+	} else if (i == 0) {
+		withS[i] = findMaxExperienceDP(h, i+1, s+1, p, withS, withP, calculated);
+		withP[i] = findMaxExperienceDP(h, i+1, s, p + s * h[i], withS, withP, calculated);
 	} else if (!calculated[i]) {
-		withS[i] = maxExp[i-1] + findMaxExperienceDP(h, i+1, s+1, p, withS, withP, calculated, maxExp);
-		withP[i] = maxExp[i-1] + findMaxExperienceDP(h, i+1, s, p + s * h[i], withS, withP, calculated, maxExp);
-		maxExp[i] = max(withS[i], withP[i]);
+		if (debug) {
+			printVector(withS, "withS iteration (before recursion) : " + to_string(i));
+			printVector(withP, "withP iteration (before recursion) : " + to_string(i));
+		}
+		withS[i] = findMaxExperienceDP(h, i+1, s+1, p, withS, withP, calculated);
+		withP[i] = findMaxExperienceDP(h, i+1, s, p + s * h[i], withS, withP, calculated);
 		calculated[i] = true;
+		if (debug) {
+			printVector(withS, "withS iteration : " + to_string(i));
+			printVector(withP, "withP iteration : " + to_string(i));
+		}
+	} else if (calculated[i]) {
+		if (debug) {
+			cout << "Already calculated : " << i << endl;
+		}
 	}
-	return maxExp[i];
+	return max(withS[i], withP[i]);
 }
 
 // unsigned long int findMaxExperience(const vector<unsigned long int>& h, unsigned int i, unsigned int s, unsigned int p,
@@ -81,19 +95,15 @@ int main() {
 		sort(healthPoints.begin(), healthPoints.end());
 		// reverse(healthPoints.begin(), healthPoints.end());
 		
-		// if (debug) {
-// 			printVector(healthPoints, "healthPoints for case " + to_string(i) + " sorted");
-// 		}
+		if (debug) {
+			printVector(healthPoints, "healthPoints for case " + to_string(i) + " sorted");
+		}
         
 		vector<unsigned long int> withS(healthPoints.size(), 0);
 		vector<unsigned long int> withP(healthPoints.size(), 0);
-		vector<unsigned long int> maxExp(healthPoints.size(), 0);
 		vector<bool> calculated(healthPoints.size(), false);
-		withS[0] = 0;
-		withP[0] = maxExp[0] = healthPoints[0];
-		calculated[0] = true;
-        auto max = findMaxExperienceDP(healthPoints, 0, 1, 0, withS, withP, calculated, maxExp);
-		cout << max << endl;
+		auto maxExperience = findMaxExperienceDP(healthPoints, 0, 1, 0, withS, withP, calculated);
+		cout << maxExperience << endl;
     }
     
     return 0;
