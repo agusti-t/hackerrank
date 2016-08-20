@@ -38,12 +38,12 @@ int main() {
     cin >> cases;
     
     for (auto i = 0; i < cases; ++i) {
-        unsigned int mandragoras {1};
+        auto mandragoras = static_cast<unsigned int>(1);
         cin >> mandragoras;
         
         vector<unsigned long int> healthPoints;
-        for (int j = 0; j < mandragoras; ++j) {
-            unsigned int health {1};
+        for (auto j = 0; j < mandragoras; ++j) {
+			auto health = static_cast<unsigned int>(1);
             cin >> health;
             healthPoints.push_back(health);
         }
