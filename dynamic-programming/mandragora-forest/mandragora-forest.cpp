@@ -19,14 +19,17 @@ void printVector(const vector<unsigned long int>& v, const string& name) {
 
 unsigned long long int findMaxExperienceIt(const vector<unsigned long int>& h) {
 	unsigned long long int max = 0;
+	auto hSize = h.size();
 	for (auto i = 0; i < h.size(); ++i) {
 		unsigned long long int sum = 0;
 		for (auto j = 0; j <= i; ++j) {
-			sum += h[j] * (h.size() - i);
+			sum += h[j] * (hSize - i);
 		}
 		// cout << "sum is : " << sum << " and max is : " << max << " iteration is : " << i << endl;
 		if (sum > max) {
 			max = sum;
+		} else {
+			break;
 		}
 	}
 	return max;
