@@ -34,16 +34,16 @@ unsigned long long int findMaxExperienceIt(const vector<unsigned long int>& h) {
 
 int main() {
     /* Enter your code here. Read input from STDIN. Print output to STDOUT */
-    unsigned int cases {1};
+	auto cases = static_cast<unsigned int>(0);
     cin >> cases;
     
     for (auto i = 0; i < cases; ++i) {
-        auto mandragoras = static_cast<unsigned int>(1);
+        auto mandragoras = static_cast<unsigned int>(0);
         cin >> mandragoras;
         
         vector<unsigned long int> healthPoints;
         for (auto j = 0; j < mandragoras; ++j) {
-			auto health = static_cast<unsigned int>(1);
+			auto health = static_cast<unsigned int>(0);
             cin >> health;
             healthPoints.push_back(health);
         }
