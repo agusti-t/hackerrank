@@ -22,8 +22,6 @@ unsigned long int findMinCandies(const vector<unsigned long int>& r) {
 	auto candyDiffUp = static_cast<unsigned long int>(1);
 	auto candyDiffDown = static_cast<unsigned long int>(0);
     auto lastUp = static_cast<unsigned long int>(0);
-    vector<unsigned int> lastUps;
-    
 	
 	for (auto i = 1; i < r.size(); ++i) {
 		if (r[i] < r[i-1]) {
@@ -31,7 +29,6 @@ unsigned long int findMinCandies(const vector<unsigned long int>& r) {
 				cout << "r[i] <  r[i-1]";
 			}
             if (candyDiffDown == 0) {
-                lastUps.push_back(i);
                 lastUp = candyDiffUp;
             }
 			candyDiffUp = 1;
@@ -39,15 +36,16 @@ unsigned long int findMinCandies(const vector<unsigned long int>& r) {
 			minCandies += candyDiffDown;
 		} else if(r[i] == r[i-1]) {
 			if (debug) {
-				cout << "r[i] <  r[i-1]";
+				cout << "r[i] == r[i-1]";
 			}
 			candyDiffUp = 1;
-			minCandies += candyDiffUp;
+			candyDiffDown = 0;
+			minCandies += 1;
         } else {
 			if (debug) {
 				cout << "r[i] >  r[i-1]";
 			}
-            if (lastUp > 0 && lastUp <= candyDiffDown) {
+            if ((lastUp > 0) && (lastUp <= candyDiffDown)) {
                 if (debug) {
                     cout << " (adding lastUp = " << candyDiffDown - lastUp + 1 << ")";
                 }
@@ -66,14 +64,10 @@ unsigned long int findMinCandies(const vector<unsigned long int>& r) {
 		}
 	}
     
-    if (lastUp > 0 && lastUp <= candyDiffDown) {
+    if ((lastUp > 0) && (lastUp <= candyDiffDown)) {
         cout << "(adding LAST lastUp = " << candyDiffDown - lastUp + 1 << ")" << endl;
         minCandies += candyDiffDown - lastUp + 1;
         lastUp = 0;
-    }
-    
-    if (debug) {
-        printContainer(lastUps, "lastUps");
     }
 	    
 	return minCandies;
