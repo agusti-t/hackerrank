@@ -6,7 +6,7 @@
 
 using namespace std;
 
-constexpr bool debug = true;
+constexpr bool debug = false;
 
 template <typename Container>
 void printContainer(const Container& c, const string& name) {
@@ -46,10 +46,8 @@ unsigned long int findMinCandies(const vector<unsigned long int>& r) {
 				cout << "r[i] >  r[i-1]";
 			}
             if ((lastUp > 0) && (lastUp <= candyDiffDown)) {
-                if (debug) {
-                    cout << " (adding lastUp = " << candyDiffDown - lastUp + 1 << ")";
-                }
-                minCandies += candyDiffDown - lastUp + 1;
+                if (debug) cout << " (adding lastUp = " << candyDiffDown - lastUp + 1 << ")";
+                minCandies += 1 + candyDiffDown - lastUp;
                 lastUp = 0;
             }
 			candyDiffDown = 0;
@@ -64,10 +62,16 @@ unsigned long int findMinCandies(const vector<unsigned long int>& r) {
 		}
 	}
     
-    if ((lastUp > 0) && (lastUp <= candyDiffDown)) {
-        cout << "(adding LAST lastUp = " << candyDiffDown - lastUp + 1 << ")" << endl;
-        minCandies += candyDiffDown - lastUp + 1;
-        lastUp = 0;
+    if (lastUp > 0) {
+		if (lastUp <= candyDiffDown) {
+        	if (debug) cout << "(adding LAST lastUp = " << candyDiffDown - lastUp + 1 << ")" << endl;
+        	minCandies += 1 + candyDiffDown - lastUp;
+        	lastUp = 0;
+		} else {
+        	if (debug) cout << "(adding LAST lastUp by ITSELF = " << lastUp << ")" << endl;
+        	minCandies += lastUp;
+        	lastUp = 0;
+		}
     }
 	    
 	return minCandies;
