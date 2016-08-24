@@ -102,9 +102,7 @@ int main() {
         ratings.push_back(rating);
 	}
 	
-	if (debug) {
-		printContainer(ratings, "ratings");
-	}
+	if (debug) printContainer(ratings, "ratings");
 	
 	auto minCandies = findMinCandies(ratings);
 	cout << minCandies << endl;
