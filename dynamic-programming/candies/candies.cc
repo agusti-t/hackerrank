@@ -91,7 +91,6 @@ unsigned long int findMinCandies(const vector<unsigned long int>& r) {
 }
 
 int main() {
-    /* Enter your code here. Read input from STDIN. Print output to STDOUT */
     auto children = static_cast<unsigned long int>(0);
     cin >> children;
     
