@@ -42,7 +42,7 @@ unsigned long int findMinCandies(const vector<unsigned long int>& r) {
 	//the two progression counters are both resetted when we have equal ratings
 	//or independently when we run into a change of succession.
 	for (auto i = 1; i < r.size(); ++i) {
-		if (r[i] < r[i-1]) {
+        if (r[i] < r[i-1]) {
 			if (debug) cout << "r[i] <  r[i-1]";
             if (candyDiffDown == 0) {
                 lastUp = candyDiffUp;
@@ -50,27 +50,23 @@ unsigned long int findMinCandies(const vector<unsigned long int>& r) {
 			candyDiffUp = 1;
 			++candyDiffDown;
 			minCandies += candyDiffDown;
-		} else if(r[i] == r[i-1]) {
-			if (debug) cout << "r[i] == r[i-1]";
-            if ((lastUp > 0) && (lastUp <= candyDiffDown)) {
-                if (debug) cout << " (adding lastUp = " << candyDiffDown - lastUp + 1 << ")";
-                minCandies += 1 + candyDiffDown - lastUp;
-                lastUp = 0;
-            }
-			candyDiffUp = 1;
-			candyDiffDown = 0;
-			minCandies += 1;
         } else {
-			if (debug) cout << "r[i] >  r[i-1]";
             if ((lastUp > 0) && (lastUp <= candyDiffDown)) {
                 if (debug) cout << " (adding lastUp = " << candyDiffDown - lastUp + 1 << ")";
                 minCandies += 1 + candyDiffDown - lastUp;
                 lastUp = 0;
             }
-			candyDiffDown = 0;
-			++candyDiffUp;
+            if (r[i] == r[i-1]) {
+                if (debug) cout << "r[i] == r[i-1]";
+    			candyDiffUp = 1;
+            } else {
+                if (debug) cout << "r[i] >  r[i-1]";
+    			++candyDiffUp;
+            }
+            candyDiffDown = 0;
             minCandies += candyDiffUp;
-		}
+        }
+		
 		if (debug) {
 			cout << " minCandies = " << minCandies << " - candyDiffUp = " << candyDiffUp
 				 << " - candyDiffDown = " << candyDiffDown << " - lastUp = " << lastUp
