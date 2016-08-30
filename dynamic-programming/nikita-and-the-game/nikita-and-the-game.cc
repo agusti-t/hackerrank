@@ -16,6 +16,26 @@ void printContainer(const Container& c, const string& name) {
     cout << c[c.size()-1] << "]" << endl;
 }
 
+unsigned long int findMaxPoints(const vector<unsigned long int>& i, unsigned long int& maxPoints) {
+    if (debug) printContainer(i, "vector to findMaxPoints");
+    
+    if (i.size() <= 1) {
+        return 0;
+    } else if (i.size() == 2) {
+        if (i[0] == i[1]) {
+            return maxPoints + 1;
+        } else {
+            return 0;
+        }
+    } else {
+        auto half = i.size() / 2;
+        maxPoints += max(findMaxPoints(vector<unsigned long int> (i.begin(), i.begin() + half), maxPoints),
+            findMaxPoints(vector<unsigned long int> (i.begin() + half, i.end()), maxPoints));
+            
+        return maxPoints;
+    }
+}
+
 int main() {
     /* Enter your code here. Read input from STDIN. Print output to STDOUT */
     auto cases = static_cast<unsigned int>(0);
@@ -33,6 +53,9 @@ int main() {
         }
         
         if (debug) printContainer(integers, "integers - " + to_string(cases));
+        
+        auto maxPoints = static_cast<unsigned long int>(0);
+        cout << findMaxPoints(integers, maxPoints) << endl;
     }
     
     return 0;
