@@ -7,6 +7,9 @@ using namespace std;
 
 constexpr bool debug = false;
 
+using ULongInt = unsigned long int;
+using constIter = vector<ULongInt>::const_iterator;
+
 template <typename Container>
 void printContainer(const Container& c, const string& name) {
     cout << "Printing container - " << name << " of size = " << c.size() << " : [";
@@ -17,59 +20,57 @@ void printContainer(const Container& c, const string& name) {
 }
 
 template <typename Container>
-void printContainerRange(const Container& c, const string& name, size_t start, size_t end) {
-    cout << "Printing container range - " << name << " of size = " << c.size() << " and range from " << start << " to " << end-1 << " : [";
+void printContainerRange(const Container& c, const string& name, typename Container::const_iterator start, typename Container::const_iterator end) {
+    cout << "Printing container range - " << name << " of size = " << c.size() << " and range from " << start - c.begin() << " to " << end-1 - c.begin() << " : [";
     for (auto i = start; i < end-1; ++i) {
-        cout << c[i] << ",";
+        cout << *i << ",";
     }
-    cout << c[end-1] << "]" << endl;
+    cout << *(end-1) << "]" << endl;
 }
 
-void findMaxPoints(const vector<unsigned long int>& c, unsigned long int& maxPoints, size_t rangeStart, size_t rangeEnd) {
+void findMaxPoints(const vector<ULongInt>& c, ULongInt& maxPoints, constIter rangeStart, constIter rangeEnd) {
     if (debug) printContainerRange(c, " to findMaxPoints", rangeStart, rangeEnd);
     
-    auto range = rangeEnd - rangeStart;
-    if (debug) cout << "range is rangeEnd (" << rangeEnd << ") - rangeStart (" << rangeStart << ") : " << range << endl;
+    auto range = distance(rangeStart, rangeEnd);
+    // if (debug) cout << "range is rangeEnd (" << rangeEnd << ") - rangeStart (" << rangeStart << ") : " << range << endl;
     if (range == 2) {
-        if (debug) {
-            cout << "range is 2 and we compare c[" << rangeStart << "] = " << c[rangeStart] << " with (c[" << rangeEnd-1 << "] - c[" 
-                << rangeStart << "]) = " << c[rangeEnd-1] - c[rangeStart] << endl;
+        auto firstNumber = *rangeStart;
+        auto secondNumber = *(rangeEnd-1) - *rangeStart;
+        if (rangeStart > c.begin()) {
+            firstNumber -= *(rangeStart-1);
         }
-        auto firstNumber = c[rangeStart];
-        auto secondNumber = c[rangeEnd-1] - c[rangeStart];
-        if (rangeStart > 0) {
-            firstNumber -= c[rangeStart-1];
+        if (debug) {
+            cout << "range is 2 and we compare firstNumber " << firstNumber << " with secondNumber " << secondNumber << endl;
         }
         if (firstNumber == secondNumber) {
             ++maxPoints;
-            if (debug) {
-                cout << "range is 2 and we compare firstNumber = " << firstNumber << " with secondNumber " << secondNumber << endl;
-            }
+            // if (debug) {
+ //                cout << "range is 2 and we compare firstNumber = " << firstNumber << " with secondNumber " << secondNumber << endl;
+ //            }
         }
     } else if (range > 2) {
-        for (auto p = 1; p < rangeEnd; ++p) {
-			auto firstHalfSum = c[rangeStart+p-1];
-			auto secondHalfSum = c[rangeEnd-1] - firstHalfSum;
-            if (rangeStart > 0) {
-                firstHalfSum -= c[rangeStart-1];
+        for (auto p = 1; p < range; ++p) {
+			auto firstHalfSum = *(rangeStart+p-1);
+			auto secondHalfSum = *(rangeEnd-1) - firstHalfSum;
+            if (rangeStart > c.begin()) {
+                firstHalfSum -= *(rangeStart-1);
             }
             if (debug) {
 				cout << "firstHalfSum = " << firstHalfSum << " | secondHalfSum = " << secondHalfSum << endl;
 			}
 			if (firstHalfSum == secondHalfSum) {
-				auto maxFirstHalf = static_cast<unsigned long int>(0);
-				auto maxSecondHalf = static_cast<unsigned long int>(0);
-				findMaxPoints(c, maxFirstHalf, rangeStart, rangeStart + p);
+				auto maxFirstHalf = static_cast<ULongInt>(0);
+				auto maxSecondHalf = static_cast<ULongInt>(0);
+                findMaxPoints(c, maxFirstHalf, rangeStart, rangeStart + p);
 				findMaxPoints(c, maxSecondHalf, rangeStart + p, rangeEnd);
                 maxPoints += 1 + max(maxFirstHalf, maxSecondHalf);
 				if (debug) {
                     cout << "maxPoints after recursion : " << maxPoints << endl;
-                    // printContainer(c, "cumulative with points (after recursion) " + to_string(maxPoints));
                 }
 				break;
 			} else if (firstHalfSum > secondHalfSum) {
-			    break;
-			}
+                break;
+            }
 		}
     }
 }
@@ -84,10 +85,10 @@ int main() {
         auto size = static_cast<unsigned int>(0);
         cin >> size;
         
-		auto sum = static_cast<unsigned long int>(0);
-		vector<unsigned long int> cumulative;
+		auto sum = static_cast<ULongInt>(0);
+		vector<ULongInt> cumulative;
 		while (size-- > 0) {
-            auto integer = static_cast<unsigned long int>(0);
+            auto integer = static_cast<ULongInt>(0);
             cin >> integer;
             sum += integer;
             cumulative.push_back(sum);
@@ -95,9 +96,9 @@ int main() {
         
         if (debug) printContainer(cumulative, "cumulative - " + to_string(cases));
 		
-        auto maxPoints = static_cast<unsigned long int>(0);
+        auto maxPoints = static_cast<ULongInt>(0);
         
-		findMaxPoints(cumulative, maxPoints, 0, cumulative.size());
+		findMaxPoints(cumulative, maxPoints, cumulative.cbegin(), cumulative.cend());
 		cout << maxPoints << endl;
     }
     
