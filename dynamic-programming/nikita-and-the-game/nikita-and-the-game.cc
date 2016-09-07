@@ -28,7 +28,7 @@ void findMaxPoints(const vector<ULongInt>& c, ULongInt& maxPoints, size_t rangeS
     } else if (range > 2) {
 		//Now if we are dealing with more than 2 positions, start trying to split the vector
 		//and checking if the sums of both parts are equal
-        for (auto p = 1; p < rangeEnd; ++p) {
+        for (auto p = 1; p < range; ++p) {
 			auto firstHalfSum = c[rangeStart+p-1];
 			auto secondHalfSum = c[rangeEnd-1] - firstHalfSum;
             if (rangeStart > 0) {
@@ -36,12 +36,6 @@ void findMaxPoints(const vector<ULongInt>& c, ULongInt& maxPoints, size_t rangeS
             }
 			//If they are, obtain the score for each of the two halves and keep the
 			//highest one
-			//
-			//Since we are trying the split from left to right, the sum of the second 
-			//half will always have to be higher or equal, at which point we split, so
-			//if the sum of the first part becomes greater that the sum of the second
-			//part all opportunities of equal sum of parts are gone, and we break the
-			//search
             if (firstHalfSum == secondHalfSum) {
 				auto maxFirstHalf = static_cast<ULongInt>(0);
 				auto maxSecondHalf = static_cast<ULongInt>(0);
@@ -49,8 +43,6 @@ void findMaxPoints(const vector<ULongInt>& c, ULongInt& maxPoints, size_t rangeS
 				findMaxPoints(c, maxSecondHalf, rangeStart + p, rangeEnd);
                 maxPoints += 1 + max(maxFirstHalf, maxSecondHalf);
 				break;
-			} else if (firstHalfSum > secondHalfSum) {
-			    break;
 			}
 		}
     }

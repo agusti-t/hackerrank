@@ -19,6 +19,10 @@ void printContainer(const Container& c, const string& name) {
     cout << c[c.size()-1] << "]" << endl;
 }
 
+UInt findChange(UInt change, const vector<UInt>& coins) {
+	
+}
+
 int main() {
     auto change = static_cast<UInt>(0);
     cin >> change;
@@ -35,8 +39,10 @@ int main() {
 	
 	if (debug) printContainer(coins, "coins");
 	
-	// auto nChange = findChange(change, coins);
-	// cout << nChange << endl;
+	sort(coins.begin(), coins.end());
+	
+	auto nChange = findChange(change, coins);
+	cout << nChange << endl;
 	
 	return 0;
 }
