@@ -19,8 +19,19 @@ void printContainer(const Container& c, const string& name) {
     cout << c[c.size()-1] << "]" << endl;
 }
 
-UInt findChange(UInt change, const vector<UInt>& coins) {
-	
+void findChange(UInt change, const vector<UInt>& coins, UInt& solutions) {
+	if (change != 0) {
+		for (auto coin : coins) {
+			if (debug) {
+				cout << "found " << solutions << " solutions and remaining change is = " << change << endl;
+			}
+			if (change > coin) {
+				findChange(change - coin, coins, solutions);
+			} else if (change - coin == 0) {
+				++solutions;
+			}
+		}
+	}
 }
 
 int main() {
@@ -37,12 +48,13 @@ int main() {
         coins.push_back(coin);
 	}
 	
-	if (debug) printContainer(coins, "coins");
-	
 	sort(coins.begin(), coins.end());
 	
-	auto nChange = findChange(change, coins);
-	cout << nChange << endl;
+	if (debug) printContainer(coins, "coins (sorted)");
+	
+	UInt solutions;
+	findChange(change, coins, solutions);
+	cout << solutions << endl;
 	
 	return 0;
 }
