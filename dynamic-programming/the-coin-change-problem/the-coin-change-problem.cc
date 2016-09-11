@@ -1,49 +1,66 @@
 #include <cmath>
 #include <cstdio>
-#include <vector>
 #include <iostream>
 #include <algorithm>
+#include <set>
+#include <unordered_set>
+#include <string>
+#include <vector>
 
 using namespace std;
 
-constexpr bool debug = true;
+constexpr bool debug = false;
 
-using UInt = unsigned int;
+using UChar = unsigned char;
+using ULInt = unsigned long int;
 
 template <typename Container>
 void printContainer(const Container& c, const string& name) {
     cout << "Printing container - " << name << " of size = " << c.size() << " : [";
-    for (auto i = 0; i < c.size()-1; ++i) {
-        cout << c[i] << ",";
+    for (auto i = c.begin(); i != c.end(); ++i) {
+        cout << *i << ",";
     }
-    cout << c[c.size()-1] << "]" << endl;
+	cout << "]" << endl;
 }
 
-void findChange(UInt change, const vector<UInt>& coins, UInt& solutions) {
+void findChange(ULInt change, const vector<ULInt>& coins, string& solution, ULInt& nSolutions, unordered_set<string>& solutions, unordered_set<string>& unsortedSolutions) {
 	if (change != 0) {
 		for (auto coin : coins) {
-			if (debug) {
-				cout << "found " << solutions << " solutions and remaining change is = " << change << endl;
-			}
+			auto coinStr = to_string(coin);
 			if (change > coin) {
-				findChange(change - coin, coins, solutions);
-			} else if (change - coin == 0) {
-				++solutions;
+				if (debug) {
+					cout << "solution so far " << solution << endl;
+				}
+				findChange(change - coin, coins, solution.append(coinStr), nSolutions, solutions, unsortedSolutions);
+				solution.pop_back();
+			} else if (change == coin) {
+				solution.append(coinStr);
+				auto sortedSolution = solution;
+				sort(sortedSolution.begin(), sortedSolution.end());
+				auto checkInsert = solutions.insert(sortedSolution);
+				// unsortedSolutions.insert(solution);
+				if (checkInsert.second == true) ++nSolutions;
+				if (debug) printContainer(solutions, "solutions so far");
+				if (debug) printContainer(unsortedSolutions, "unsortedSolutions so far");
+				solution.pop_back();
+				cout << nSolutions << endl;
+			} else {
+				break;
 			}
 		}
 	}
 }
 
 int main() {
-    auto change = static_cast<UInt>(0);
+    auto change = static_cast<ULInt>(0);
     cin >> change;
 	
-	auto nCoins = static_cast<UInt>(0);
+	auto nCoins = static_cast<ULInt>(0);
 	cin >> nCoins;
     
-	vector<UInt> coins;
+	vector<ULInt> coins;
     for (auto i = 0; i < nCoins; ++i) {
-        auto coin = static_cast<UInt>(0);
+        auto coin = static_cast<ULInt>(0);
  	   	cin >> coin;
         coins.push_back(coin);
 	}
@@ -52,9 +69,15 @@ int main() {
 	
 	if (debug) printContainer(coins, "coins (sorted)");
 	
-	UInt solutions;
-	findChange(change, coins, solutions);
-	cout << solutions << endl;
+	ULInt nSolutions = 0;
+	unordered_set<string> solutions;
+	unordered_set<string> unsortedSolutions;
+	// for (auto coin : coins) {
+		string solution;
+		findChange(change, coins, solution, nSolutions, solutions, unsortedSolutions);
+	// }
+	
+	cout << nSolutions << endl;
 	
 	return 0;
 }
