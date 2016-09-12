@@ -9,7 +9,7 @@
 
 using namespace std;
 
-constexpr bool debug = false;
+constexpr bool debug = true;
 
 using UChar = unsigned char;
 using ULInt = unsigned long int;
@@ -23,29 +23,37 @@ void printContainer(const Container& c, const string& name) {
 	cout << "]" << endl;
 }
 
-void findChange(ULInt change, const vector<ULInt>& coins, string& solution, ULInt& nSolutions, unordered_set<string>& solutions, unordered_set<string>& unsortedSolutions) {
+void findChange(ULInt change, const vector<ULInt>& coins, string& solution, ULInt& nSolutions,
+		unordered_set<string>& solutions, vector<ULInt>::const_iterator& fromStart, unordered_set<string>& unsortedSolutions) {
 	if (change != 0) {
-		for (auto coin : coins) {
+		for (auto it = fromStart; it != coins.cend(); ++it) {
+			auto coin = *it;
 			auto coinStr = to_string(coin);
+			if (debug) {
+				cout << "current coin is : " << coinStr << endl;
+				cout << "current change is : " << change << endl;
+			}
 			if (change > coin) {
-				if (debug) {
-					cout << "solution so far " << solution << endl;
-				}
-				findChange(change - coin, coins, solution.append(coinStr), nSolutions, solutions, unsortedSolutions);
+				findChange(change - coin, coins, solution.append(coinStr), nSolutions, solutions, fromStart, unsortedSolutions);
 				solution.pop_back();
 			} else if (change == coin) {
 				solution.append(coinStr);
 				auto sortedSolution = solution;
 				sort(sortedSolution.begin(), sortedSolution.end());
 				auto checkInsert = solutions.insert(sortedSolution);
-				// unsortedSolutions.insert(solution);
-				if (checkInsert.second == true) ++nSolutions;
+				unsortedSolutions.insert(solution);
+				if (checkInsert.second == true) { 
+					++nSolutions;
+					cout << "solution found! : " << solution << endl;
+				}
 				if (debug) printContainer(solutions, "solutions so far");
 				if (debug) printContainer(unsortedSolutions, "unsortedSolutions so far");
 				solution.pop_back();
-				cout << nSolutions << endl;
 			} else {
-				break;
+				if (debug) {
+					cout << "overshooting, try with next coin " << coinStr << endl;
+				}
+				++fromStart;
 			}
 		}
 	}
@@ -66,15 +74,17 @@ int main() {
 	}
 	
 	sort(coins.begin(), coins.end());
+	reverse(coins.begin(), coins.end());
 	
 	if (debug) printContainer(coins, "coins (sorted)");
 	
 	ULInt nSolutions = 0;
 	unordered_set<string> solutions;
 	unordered_set<string> unsortedSolutions;
+	auto fromStart = coins.cbegin();
 	// for (auto coin : coins) {
 		string solution;
-		findChange(change, coins, solution, nSolutions, solutions, unsortedSolutions);
+		findChange(change, coins, solution, nSolutions, solutions, fromStart, unsortedSolutions);
 	// }
 	
 	cout << nSolutions << endl;
