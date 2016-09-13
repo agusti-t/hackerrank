@@ -26,13 +26,12 @@ void printContainer(const Container& c, const string& name) {
 
 class Solution {
 public:
-    Solution(vector<UInt> s, UInt i, UInt c);
+    Solution(UInt i, UInt c);
     Solution(const Solution& a);
     Solution(Solution&& a);
     Solution& operator=(const Solution& a);
     Solution& operator=(Solution&& a);
     
-    vector<UInt>& getSequence();
     UInt getIndex();
     void setIndex(UInt i);
     UInt getChange();
@@ -42,25 +41,23 @@ public:
     friend void printCompleteSolution(const Solution& a);
     
 private:
-    vector<UInt> sequence;
     UInt index;
     UInt change;
 };
 
-Solution::Solution(vector<UInt> s, UInt i, UInt c) 
-    : sequence(s), index(i), change(c) 
+Solution::Solution(UInt i, UInt c) 
+    : index(i), change(c) 
 {}
 
 Solution::Solution(const Solution& a)
-    : sequence(a.sequence), index(a.index), change(a.change)
+    : index(a.index), change(a.change)
 {}
 
 Solution::Solution(Solution&& a) 
-    : sequence(move(a.sequence)), index(move(a.index)), change(move(a.change))
+    : index(move(a.index)), change(move(a.change))
 {}
     
 Solution& Solution::operator=(const Solution& a) {
-    sequence = a.sequence;
     index = a.index;
     change = a.change;
     
@@ -68,15 +65,10 @@ Solution& Solution::operator=(const Solution& a) {
 }
 
 Solution& Solution::operator=(Solution&& a) {
-    sequence = move(a.sequence);
     index = move(a.index);
     change = move(a.change);
     
     return *this;
-}
-
-vector<UInt>& Solution::getSequence() {
-    return sequence;
 }
 
 UInt Solution::getIndex() {
@@ -96,13 +88,7 @@ void Solution::setChange(UInt c) {
 }
 
 ostream& operator<<(ostream& outstream, const Solution& a) {
-    if (a.sequence.size() > 0) {
-        outstream << "[";
-        for (auto i = 0; i < a.sequence.size()-1; ++i) {
-            outstream << a.sequence[i] << ",";
-        }
-        outstream << a.sequence[a.sequence.size()-1] << "]" << endl;
-    }
+    outstream << "Index is " << a.index << "and change is " << a.change << endl;
     
     return outstream;
 }
@@ -119,7 +105,7 @@ void initPartialSolutions(UInt change, const vector<UInt>& coins, vector<Solutio
     for (auto i = 0; i < coins.size(); ++i) {
         auto coin = coins[i];
         if (change > coin) {
-            partialSolutions.emplace_back(vector<UInt>{coin}, i, change - coin);
+            partialSolutions.emplace_back(i, change - coin);
         } else if (change == coin) {
             ++solutions;
         }
@@ -143,25 +129,16 @@ ULInt findChange(UInt change, const vector<UInt>& coins) {
             }
             for (auto i = solIndex; i < coins.size(); ++i) {
                 auto coin = coins[i];
-                auto solSequence = partialSolution.getSequence();
                 if (debug) {
                     cout << "trying with coin " << coin << endl;
-                    printContainer(solSequence, "solSequence iteration " + to_string(i));
                 }
                 if (solChange > coin) {
-                    solSequence.push_back(coin);
-                    nextPartialSolutions.emplace_back(solSequence, i, solChange - coin);
-                    if (debug) {
-                        printContainer(solSequence, "!!!!!!!! partial solution !!!!!!!!!");
-                    }
+                    nextPartialSolutions.emplace_back(i, solChange - coin);
                 } else if (solChange == coin) {
                     ++solutions;
-                    if (debug) {
-                        printContainer(solSequence, "--------- solution ---------");
-                    }
-                    if (solutions % 10000 == 0) {
-                        cout << solutions << endl;
-                    }
+                    // if (solutions % 100000 == 0) {
+//                         cout << solutions << endl;
+//                     }
                 }
             }
         }
