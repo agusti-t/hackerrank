@@ -9,7 +9,7 @@
 
 using namespace std;
 
-constexpr bool debug = true;
+constexpr bool debug = false;
 
 using UChar = unsigned char;
 using ULInt = unsigned long int;
@@ -24,57 +24,6 @@ void printContainer(const Container& c, const string& name) {
 	cout << "]" << endl;
 }
 
-// void printContainerInsideContainer(const vector<vector<UInt>>& c, const string& name) {
-//     cout << "Printing container - " << name << " of size = " << c.size() << " : {" << endl;
-//     for (auto i = c.begin(); i != c.end(); ++i) {
-//         cout << "[";
-//         for (auto j = (*i).cbegin(); j != (*i).cend(); ++j) {
-//             cout << *j << ",";
-//         }
-//         cout << "]," << endl;
-//     }
-//     cout << endl << "}" << endl;
-// }
-
-// void findChange(ULInt change, const vector<ULInt>& coins, string& solution, ULInt& nSolutions,
-//         unordered_set<string>& solutions, vector<ULInt>::const_iterator& fromStart, unordered_set<string>& unsortedSolutions) {
-//     if (change != 0) {
-//         for (auto it = fromStart; it != coins.cend(); ++it) {
-//             auto coin = *it;
-//             auto coinStr = to_string(coin);
-//             if (debug) {
-//                 cout << "current coin is : " << coinStr << endl;
-//                 cout << "current change is : " << change << endl;
-//             }
-//             if (change > coin) {
-//                 findChange(change - coin, coins, solution.append(coinStr), nSolutions, solutions, fromStart, unsortedSolutions);
-//                 solution.pop_back();
-//             } else if (change == coin) {
-//                 solution.append(coinStr);
-//                 auto sortedSolution = solution;
-//                 sort(sortedSolution.begin(), sortedSolution.end());
-//                 auto checkInsert = solutions.insert(sortedSolution);
-//                 unsortedSolutions.insert(solution);
-//                 if (checkInsert.second == true) {
-//                     ++nSolutions;
-//                     cout << "solution found! : " << solution << endl;
-//                 }
-//                 if (next(it) == coins.cend()) {
-//                     ++fromStart;
-//                 }
-//                 solution.pop_back();
-//                 if (debug) printContainer(solutions, "solutions so far");
-//                 if (debug) printContainer(unsortedSolutions, "unsortedSolutions so far");
-//             } else {
-//                 if (debug) {
-//                     cout << "overshooting, try with next coin " << coinStr << endl;
-//                 }
-//                 // ++fromStart;
-//             }
-//         }
-//     }
-// }
-
 class Solution {
 public:
     Solution(vector<UInt> s, UInt i, UInt c);
@@ -85,6 +34,7 @@ public:
     
     vector<UInt>& getSequence();
     UInt getIndex();
+    void setIndex(UInt i);
     UInt getChange();
     void setChange(UInt c);
     
@@ -133,6 +83,10 @@ UInt Solution::getIndex() {
     return index;
 }
 
+void Solution::setIndex(UInt i) {
+    index = i;
+}
+
 UInt Solution::getChange() {
     return change;
 }
@@ -161,78 +115,65 @@ void printCompleteSolution(const Solution& a) {
     cout << "---------------------------------" << endl;
 }
 
+void initPartialSolutions(UInt change, const vector<UInt>& coins, vector<Solution>& partialSolutions, ULInt& solutions) {
+    for (auto i = 0; i < coins.size(); ++i) {
+        auto coin = coins[i];
+        if (change > coin) {
+            partialSolutions.emplace_back(vector<UInt>{coin}, i, change - coin);
+        } else if (change == coin) {
+            ++solutions;
+        }
+    }
+}
+
 ULInt findChange(UInt change, const vector<UInt>& coins) {
     auto i = 0;
     auto prevIndex = 0;
-    vector<Solution> solutions;
+    ULInt solutions = 0;
     vector<Solution> partialSolutions;
-    Solution solution(vector<UInt>(), i, change);
-    auto remainingChange = solution.getChange();
-	auto cSize = coins.size();
-    while (i < cSize) {
-        auto coin = coins[i];
-		if (debug) cout << "trying coin : " << coin << endl;
-        if (remainingChange >= coin) {
-			// solution.getSequence().insert(solution.getSequence().end(), remainingChange / coin, coin);
-			// remainingChange %= coin;
-			// solution.setChange(remainingChange);
-			while (remainingChange >= coin) {
-				solution.getSequence().push_back(coin);
-				remainingChange -= coin;
-	            if (remainingChange > 0 && i < cSize-1) {
-	                partialSolutions.push_back(Solution(solution.getSequence(), i+1, remainingChange));
-	                if (debug) {
-	                    cout << "storing partial solution" << endl;
-	                    printCompleteSolution(partialSolutions.back());
-	                }
-				}
+    initPartialSolutions(change, coins, partialSolutions, solutions);
+    vector<Solution> nextPartialSolutions;
+    while (!partialSolutions.empty()) {
+        for (auto partialSolution : partialSolutions) {
+            auto solChange = partialSolution.getChange();
+            auto solIndex = partialSolution.getIndex();
+            if (debug) {
+                cout << "current partial solution : " << endl;
+                printCompleteSolution(partialSolution);
             }
-			solution.setChange(remainingChange); 
-			if (remainingChange == 0) {	       
-	            solutions.push_back(solution);
-	            if (debug) {
-	                printContainer(solution.getSequence(), "solution found");
-	            }
-	            if (!partialSolutions.empty() && i < cSize-1) {
-	                solution = partialSolutions.back();
-	                partialSolutions.pop_back();
-	                i = solution.getIndex();
-	                remainingChange = solution.getChange();
-	                if (debug) {
-	                    cout << "loading partial solution" << endl;
-	                    printCompleteSolution(solution);
-	                }
-	            }
-	        }
-        } 
-		if (i == coins.size()-1) {
-			if (!partialSolutions.empty()) {
-                solution = partialSolutions.back();
-                partialSolutions.pop_back();
-                i = solution.getIndex();
-                remainingChange = solution.getChange();
+            for (auto i = solIndex; i < coins.size(); ++i) {
+                auto coin = coins[i];
+                auto solSequence = partialSolution.getSequence();
                 if (debug) {
-                    cout << "loading partial solution" << endl;
-                    printCompleteSolution(solution);
+                    cout << "trying with coin " << coin << endl;
+                    printContainer(solSequence, "solSequence iteration " + to_string(i));
                 }
-			} else {
-	            if (debug) cout << "resetting change" << endl;
-	            remainingChange = change;
-	            i = prevIndex + 1;
-	            ++prevIndex;
-	            vector<UInt>& seq = solution.getSequence();
-	            solution.getSequence().clear();
-				partialSolutions.clear();
-	            if (debug) cout << "increasing prevIndex to : " << prevIndex << endl;
-			}
-        } else {
-            ++i;
+                if (solChange > coin) {
+                    solSequence.push_back(coin);
+                    nextPartialSolutions.emplace_back(solSequence, i, solChange - coin);
+                    if (debug) {
+                        printContainer(solSequence, "!!!!!!!! partial solution !!!!!!!!!");
+                    }
+                } else if (solChange == coin) {
+                    ++solutions;
+                    if (debug) {
+                        printContainer(solSequence, "--------- solution ---------");
+                    }
+                    if (solutions % 10000 == 0) {
+                        cout << solutions << endl;
+                    }
+                }
+            }
         }
-        if (debug) printContainer(solutions, "solutions so far");
-        if (debug) printContainer(partialSolutions, "partial solutions");
+        if (debug) {
+            printContainer(nextPartialSolutions, "nextPartialSolutions");
+        }
+        // partialSolutions.clear();
+        partialSolutions = nextPartialSolutions;
+        nextPartialSolutions.clear();
     }
     
-    return solutions.size();
+    return solutions;
 }
 
 int main() {
