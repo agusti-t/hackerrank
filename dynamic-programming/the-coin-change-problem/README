@@ -3,3 +3,6 @@ https://www.hackerrank.com/challenges/coin-change
 
 To compile:
 clang++ -std=c++11 -stdlib=libc++ -Wno-c++98-compat-pedantic -Wno-c++98-compat the-coin-change-problem.cc -o change
+
+NOTE:
+Gave up on this one and ended up copying it from: http://www.geeksforgeeks.org/dynamic-programming-set-7-coin-change/
