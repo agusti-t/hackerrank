@@ -3,13 +3,13 @@
 #include <iostream>
 #include <algorithm>
 #include <set>
-#include <unordered_set>
+#include <unordered_map>
 #include <string>
 #include <vector>
 
 using namespace std;
 
-constexpr bool debug = true;
+constexpr bool debug = false;
 
 using UChar = unsigned char;
 using ULInt = unsigned long int;
@@ -24,124 +24,127 @@ void printContainer(const Container& c, const string& name) {
 	cout << "]" << endl;
 }
 
-class Solution {
+template <typename Map>
+void printMap(const Map& m, const string& name) {
+    cout << "Printing map - " << name << " of size = " << m.size() << " : [" << endl;
+    for (auto kv : m) {
+        cout << "[" << kv.first << "," << kv.second << "]" << endl;
+    }
+	cout << "]" << endl; 
+}
+
+class PartialSolution {
 public:
-    Solution(UInt i, UInt c);
-    Solution(const Solution& a);
-    Solution(Solution&& a);
-    Solution& operator=(const Solution& a);
-    Solution& operator=(Solution&& a);
+    PartialSolution(UInt ci, UInt ch);
     
-    UInt getIndex();
-    void setIndex(UInt i);
-    UInt getChange();
-    void setChange(UInt c);
+    UInt getCoin() const;
+    void setCoin(UInt ci);
+    UInt getChange() const;
+    void setChange(UInt ch);
     
-    friend ostream& operator<<(ostream& outstream, const Solution& a);
+    friend ostream& operator<<(ostream& outstream, const PartialSolution& a);
+    friend bool operator==(const PartialSolution& a, const PartialSolution& b);
     
 private:
-    UInt index;
+    UInt coin;
     UInt change;
 };
 
-Solution::Solution(UInt i, UInt c) 
-    : index(i), change(c) 
+struct PartialSolutionHasher {
+    size_t operator()(const PartialSolution& a) const {
+        return ((hash<UInt>()(a.getCoin()))
+            ^ (hash<UInt>()(a.getChange())));
+    }
+};
+
+PartialSolution::PartialSolution(UInt ci, UInt ch) 
+    : coin(ci), change(ch) 
 {}
 
-Solution::Solution(const Solution& a)
-    : index(a.index), change(a.change)
-{}
-
-Solution::Solution(Solution&& a) 
-    : index(move(a.index)), change(move(a.change))
-{}
-    
-Solution& Solution::operator=(const Solution& a) {
-    index = a.index;
-    change = a.change;
-    
-    return *this;
+UInt PartialSolution::getCoin() const {
+    return coin;
 }
 
-Solution& Solution::operator=(Solution&& a) {
-    index = move(a.index);
-    change = move(a.change);
-    
-    return *this;
+void PartialSolution::setCoin(UInt ci) {
+    coin = ci;
 }
 
-UInt Solution::getIndex() {
-    return index;
-}
-
-void Solution::setIndex(UInt i) {
-    index = i;
-}
-
-UInt Solution::getChange() {
+UInt PartialSolution::getChange() const {
     return change;
 }
 
-void Solution::setChange(UInt c) {
-    change = c;
+void PartialSolution::setChange(UInt ch) {
+    change = ch;
 }
 
-ostream& operator<<(ostream& outstream, const Solution& a) {
-    outstream << "i = " << a.index << " | c = " << a.change << endl;
+bool operator==(const PartialSolution& a, const PartialSolution& b) {
+    return (a.change == b.change
+        && a.coin == b.coin);
+}
+
+ostream& operator<<(ostream& outstream, const PartialSolution& a) {
+    outstream << "coin = " << a.coin << " | change = " << a.change;
     
     return outstream;
 }
 
-void findPartialSolutions(UInt change, const vector<UInt>& coins, UInt startIndex, vector<Solution>& partialSolutions, ULInt& solutions) {
-    for (auto i = startIndex; i < coins.size(); ++i) {
-        auto coin = coins[i];
-        if (debug) {
-            cout << "coin : " << coin << endl;
-            cout << "change : " << change << endl;
-            cout << "startIndex : " << startIndex << endl;
-        }
-        if (change % coin == 0) {
-            cout << "solution FOUND!" << endl;
-            ++solutions;
-        } else if (change / coin > 0) {
-            cout << "partial solution ADDED! (index " << i+1 << ", change " << change / coin << ")" << endl;
-            partialSolutions.emplace_back(i+1, change / coin);
-        }
-        cout << endl;
-    }
-}
+using umap = unordered_map<PartialSolution, ULInt, PartialSolutionHasher>;
 
-ULInt findChange(UInt change, const vector<UInt>& coins) {
-    auto i = 0;
-    auto prevIndex = 0;
-    ULInt solutions = 0;
-    vector<Solution> partialSolutions;
-    vector<Solution> nextPartialSolutions;
-    findPartialSolutions(change, coins, 0, partialSolutions, solutions);
-    
-    for (auto i = 0; i < coins.size(); ++i) {
-        while (!partialSolutions.empty()) {
-            for (auto partialSolution : partialSolutions) {
-                if (debug) {
-                    cout << "processing partialSolution : " << partialSolution << endl;
-                }
-                auto solChange = partialSolution.getChange();
-                auto solIndex = partialSolution.getIndex();
-                findPartialSolutions(solChange, coins, solIndex, nextPartialSolutions, solutions);
-            }
-            if (debug) {
-                printContainer(nextPartialSolutions, "nextPartialSolutions");
-            }
-            // partialSolutions.clear();
-            partialSolutions = nextPartialSolutions;
-            nextPartialSolutions.clear();
-        }
-        
-        //here partialSolutions is empty
-        findPartialSolutions(change - coins[i], coins, i+1, partialSolutions, solutions);
+ULInt findChange(UInt change, vector<UInt> coins, umap& cache) {
+    if (change == 0) {
+        return 1;
     }
     
-    return solutions;
+    if (coins.size() == 0) {
+        return 0;
+    }
+        
+    auto coin = coins.back();
+    coins.pop_back();
+    
+    if (debug) {
+        cout << "--------------------- START coin : " << coin << " ---------------------" << endl;
+        cout << "trying with coin : " << coin << endl;
+    }
+    
+    auto numCoins = static_cast<UInt>(0);
+    auto ways = static_cast<ULInt>(0);
+    while (numCoins*coin <= change) {
+        auto remainingChange = change - numCoins*coin;
+        if (debug) cout << "remainingChange is : " << remainingChange << endl;
+        PartialSolution ps = PartialSolution(coin, remainingChange);
+        auto waysFound = cache.find(ps);
+        if (waysFound != cache.end()) {
+            if (debug) {
+                cout << "CACHED ways : " << waysFound->second << " for " << ps << endl;
+            }
+            ways += waysFound->second;
+        } else {
+            ways += findChange(remainingChange, coins, cache);
+            if (debug) {
+                cout << "UNCACHED ways : " << ways << " for coin = " << coin << " change = " << change << endl;
+            }
+        }
+        ++numCoins;
+    }
+    
+    auto checkInsert = cache.emplace(PartialSolution(coin, change), ways);
+    if (checkInsert.second == true) {
+        if (debug) {
+            cout << "CACHING ways : " << ways << " for coin = " << coin << " change = " << change << endl;
+        }
+    } else {
+        if (debug) {
+            cout << "Already CACHED" << endl;
+        }
+    }
+    
+    if (debug) {
+        printMap(cache, "cached ways");
+        cout << "--------------------- STOP coin : " << coin << " ---------------------" << endl;
+    }    
+    
+    return ways;
 }
 
 int main() {
@@ -158,12 +161,13 @@ int main() {
         coins.push_back(coin);
 	}
 	
-	sort(coins.begin(), coins.end());
-	reverse(coins.begin(), coins.end());
+	// sort(coins.begin(), coins.end());
+//     reverse(coins.begin(), coins.end());
 	
-	if (debug) printContainer(coins, "coins (sorted)");
+    if (debug) printContainer(coins, "coins (sorted)");
 	
-	cout << findChange(change, coins) << endl;
+    umap cache;
+    cout << findChange(change, coins, cache) << endl;
 	
 	return 0;
 }
