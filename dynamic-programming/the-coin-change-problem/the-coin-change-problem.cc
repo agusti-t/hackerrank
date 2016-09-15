@@ -68,7 +68,7 @@ void printMatrix(const Matrix& m, const string& name) {
 //  - The ways of giving change for that amount minus at least one use of the coin
 //    at the index concerning us. We call this x.
 //  - The ways of giving change for that amount using 0 times the coin at the index
-//    concerning us.
+//    concerning us. We call this y.
 //
 //For example, for the examples given above:
 //  1- m[0][0]:
