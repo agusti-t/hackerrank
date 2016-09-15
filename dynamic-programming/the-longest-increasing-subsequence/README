@@ -1,0 +1,5 @@
+Problem description:
+https://www.hackerrank.com/challenges/longest-increasing-subsequent
+
+To compile:
+clang++ -std=c++11 -stdlib=libc++ -Wno-c++98-compat-pedantic -Wno-c++98-compat the-longest-increasing-subsequence.cc -o lis
