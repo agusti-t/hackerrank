@@ -36,38 +36,24 @@ void printMatrix(const Matrix& m, const string& name) {
 	cout << "}" << endl;
 }
 
-ULInt findLIS(const vector<ULInt>& s) {
-	
-	if (s.size() == 0) {
-		return 0;
-	}
-	
-	if (s.size() == 1) {
-		return 1;
-	}
-
-	vector<vector<ULInt>> a(s.size(), vector<ULInt>(s.size()+1, 1));
-	auto lisLength = static_cast<ULInt>(1);
-	
-	for (auto i = 0; i < a.size(); ++i) {
-		a[i][i] = s[i];
+ULInt findLIS(const vector<ULInt>& s, vector<ULInt>& subLIS, ULInt i) {
+	vector<ULInt> lises(s.size(), 1);
+	auto lis = static_cast<ULInt>(1);
+	for (auto i = 0; i < s.size(); ++i) {
 		auto tempLis = static_cast<ULInt>(1);
-		for (auto j = i+1; j < a[i].size()-1; ++j) {
-			if (s[j] > a[i][j-1]) {
+		for (auto j = i+1; j < s.size(); ++j) {
+			if (s[j] > s[i]) {
 				++tempLis;
-				a[i][j] = s[j];
-			} else {
-				a[i][j] = a[i][j-1];
+			} else if (s[j] < s[i]) {
+				tempLis = 1;
 			}
 		}
-		if (debug) cout << tempLis << endl;
-		a[i][s.size()] = tempLis;
-		lisLength = max(lisLength, tempLis);
+		lises[i] = max(lises[i], tempLis);
+		lis = max(lis, lises[i]);
+		if (debug) printContainer(lises, "lises " + to_string(i));
 	}
 	
-	if (debug) printMatrix(a, "LISes");
-	
-	return lisLength;
+	return lis;
 }
 
 int main() {
@@ -83,7 +69,8 @@ int main() {
 	
 	if (debug) printContainer(sequence, "sequence");
 	
-	cout << findLIS(sequence) << endl;
+	vector<ULInt> subLIS(sequence.size());
+	cout << findLIS(sequence, subLIS, 0) << endl;
 	
 	return 0;
 }
