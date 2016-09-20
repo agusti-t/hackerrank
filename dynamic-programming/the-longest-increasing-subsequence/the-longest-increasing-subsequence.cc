@@ -6,7 +6,7 @@
 
 using namespace std;
 
-constexpr bool debug = false;
+constexpr bool debug = true;
 
 using UChar = unsigned char;
 using ULInt = unsigned long int;
@@ -38,18 +38,33 @@ void printMatrix(const Matrix& m, const string& name) {
 
 ULInt findLIS(const vector<ULInt>& s, vector<ULInt>& subLIS, ULInt i) {
 	vector<ULInt> lises(s.size(), 1);
+	vector<ULInt> mins(s.size(), 0);
 	auto lis = static_cast<ULInt>(1);
+	auto tempLis = static_cast<ULInt>(1);
+	auto tempMin = static_cast<ULInt>(0);
 	for (auto i = 0; i < s.size(); ++i) {
-		auto tempLis = static_cast<ULInt>(1);
-		for (auto j = i+1; j < s.size(); ++j) {
-			if (s[j] > s[i]) {
-				++tempLis;
-			} else if (s[j] < s[i]) {
-				tempLis = 1;
+		for (auto j = i; j < s.size(); ++j) {
+			tempLis = 0;
+			tempMin = s[j];
+			for (auto k = j-1; k >= i; --k) {
+				if (s[k] < tempMin) {
+					++tempLis;
+					tempMin = s[k];
+				} 
+				if(debug) cout << s[k] << " ";
 			}
+			if (debug) cout << "tempLis " << tempLis << endl;
+			if (debug) printContainer(mins, "mins");
+			if (tempLis > lises[i]) {
+				lises[i] = tempLis;
+				mins[i] = tempMin;
+			}
+			lises[i] = max(lises[i], tempLis);
+			lis = max(lis, lises[i]);
 		}
-		lises[i] = max(lises[i], tempLis);
-		lis = max(lis, lises[i]);
+		if (debug) cout << endl;
+		// lises[i] = max(lises[i], tempLis);
+// 		lis = max(lis, lises[i]);
 		if (debug) printContainer(lises, "lises " + to_string(i));
 	}
 	
