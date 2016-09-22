@@ -6,7 +6,7 @@
 
 using namespace std;
 
-constexpr bool debug = true;
+constexpr bool debug = false;
 
 using UChar = unsigned char;
 using ULInt = unsigned long int;
@@ -37,35 +37,47 @@ void printMatrix(const Matrix& m, const string& name) {
 }
 
 ULInt findLIS(const vector<ULInt>& s, vector<ULInt>& subLIS, ULInt i) {
-	vector<ULInt> lises(s.size(), 1);
-	vector<ULInt> mins(s.size(), 0);
+	vector<ULInt> lises(s.size(), 0);
 	auto lis = static_cast<ULInt>(1);
 	auto tempLis = static_cast<ULInt>(1);
 	auto tempMin = static_cast<ULInt>(0);
-	for (auto i = 0; i < s.size(); ++i) {
-		for (auto j = i; j < s.size(); ++j) {
-			tempLis = 0;
-			tempMin = s[j];
-			for (auto k = j-1; k >= i; --k) {
-				if (s[k] < tempMin) {
-					++tempLis;
-					tempMin = s[k];
-				} 
-				if(debug) cout << s[k] << " ";
-			}
-			if (debug) cout << "tempLis " << tempLis << endl;
-			if (debug) printContainer(mins, "mins");
-			if (tempLis > lises[i]) {
-				lises[i] = tempLis;
-				mins[i] = tempMin;
-			}
-			lises[i] = max(lises[i], tempLis);
-			lis = max(lis, lises[i]);
+    lises[0] = 1;
+    
+	if (debug) printContainer(lises, "lises " + to_string(i));
+    if (debug) printContainer(s, "sequence");
+    if (debug) cout << endl << endl;
+    
+    for (auto i = 1; i < s.size(); ++i) {
+        if (debug) cout << "i is : " << i << " and s[i] : " << s[i] << endl;
+        
+        tempMin = s[0];
+        tempLis = 1;
+        for (auto k = 0; k < i; ++k) {
+            if (lises[k] >= tempLis && s[k] < s[i]) {
+                tempLis = lises[k];
+                tempMin = s[k];
+                if (debug) cout << "found a better lis at index k = " << k << " number is s[k] = " << tempMin << " and with lenght " << tempLis << endl;
+            }
+        }
+        
+		if (s[i] > tempMin) {
+			++tempLis;
+			tempMin = s[i];
+		} else if (s[i] == tempMin) {
+		    tempLis = 1;
+		} else {
+		    tempMin = s[i];
+            tempLis = 1; 
 		}
-		if (debug) cout << endl;
-		// lises[i] = max(lises[i], tempLis);
-// 		lis = max(lis, lises[i]);
+        
+        lises[i] = tempLis;
+		lis = max(lis, lises[i]);
+        
+        if (debug) cout << s[i] << " "; 
+		if (debug) cout << "tempLis " << tempLis << endl;
 		if (debug) printContainer(lises, "lises " + to_string(i));
+        if (debug) printContainer(s, "sequence");
+        if (debug) cout << endl;
 	}
 	
 	return lis;
