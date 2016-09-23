@@ -62,8 +62,6 @@ ULInt findLISn2(const vector<ULInt>& s) {
         
 		if (s[i] > tempMin) {
 			++tempLis;
-		} else if (s[i] == tempMin) {
-		    tempLis = 1;
 		} else {
             tempLis = 1; 
 		}
@@ -81,6 +79,49 @@ ULInt findLISn2(const vector<ULInt>& s) {
 	return lis;
 }
 
+ULInt findCeiling(const vector<ULInt>& s, const vector<ULInt>& t, ULInt v, ULInt end) {
+    auto beginning = static_cast<ULInt>(0);
+    while (end > beginning + 1) {
+        auto p = beginning + (end - beginning) / 2;
+        if (s[t[p]] >= v) {
+            end = p;
+        } else {
+            beginning = p;
+        }
+    }
+    
+    return end;
+}
+
+ULInt findLISnlogn(const vector<ULInt>& s) {
+    vector<ULInt> temp(s.size(), 0);
+    vector<ULInt> res(s.size(), 0);
+    auto len = static_cast<ULInt>(0);
+    
+    temp[0] = 0;
+    
+    for (auto i = 1; i < s.size(); ++i) {
+        if (s[i] > s[temp[len]]) {
+            res[i] = temp[len];
+            ++len;
+            temp[len] = i;
+        } else if (s[i] <= s[temp[0]]) {
+            temp[0] = i;
+        } else {
+            auto c = findCeiling(s, temp, s[i], len);
+            temp[c] = i;
+            res[i] = temp[c-1];
+        }
+        
+        if (debug) {
+            printContainer(temp, "temp");
+            printContainer(res, "res");
+        }
+    }
+    
+    return len+1;
+}
+
 int main() {
     auto n = static_cast<ULInt>(0);
     cin >> n;
@@ -94,7 +135,7 @@ int main() {
 	
 	if (debug) printContainer(sequence, "sequence");
 	
-	cout << findLISn2(sequence) << endl;
+	cout << findLISnlogn(sequence) << endl;
 	
 	return 0;
 }
