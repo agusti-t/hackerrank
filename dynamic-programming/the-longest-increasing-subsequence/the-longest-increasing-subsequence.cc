@@ -36,14 +36,14 @@ void printMatrix(const Matrix& m, const string& name) {
 	cout << "}" << endl;
 }
 
-ULInt findLIS(const vector<ULInt>& s, vector<ULInt>& subLIS, ULInt i) {
+ULInt findLISn2(const vector<ULInt>& s) {
 	vector<ULInt> lises(s.size(), 0);
 	auto lis = static_cast<ULInt>(1);
 	auto tempLis = static_cast<ULInt>(1);
 	auto tempMin = static_cast<ULInt>(0);
     lises[0] = 1;
     
-	if (debug) printContainer(lises, "lises " + to_string(i));
+	if (debug) printContainer(lises, "lises");
     if (debug) printContainer(s, "sequence");
     if (debug) cout << endl << endl;
     
@@ -62,11 +62,9 @@ ULInt findLIS(const vector<ULInt>& s, vector<ULInt>& subLIS, ULInt i) {
         
 		if (s[i] > tempMin) {
 			++tempLis;
-			tempMin = s[i];
 		} else if (s[i] == tempMin) {
 		    tempLis = 1;
 		} else {
-		    tempMin = s[i];
             tempLis = 1; 
 		}
         
@@ -96,8 +94,7 @@ int main() {
 	
 	if (debug) printContainer(sequence, "sequence");
 	
-	vector<ULInt> subLIS(sequence.size());
-	cout << findLIS(sequence, subLIS, 0) << endl;
+	cout << findLISn2(sequence) << endl;
 	
 	return 0;
 }
