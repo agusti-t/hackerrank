@@ -1,0 +1,5 @@
+Problem description:
+https://www.hackerrank.com/challenges/non-divisible-subset
+
+To compile:
+clang++ -std=c++11 -stdlib=libc++ -Wno-c++98-compat-pedantic -Wno-c++98-compat non-divisible-subset.cc -o subset
